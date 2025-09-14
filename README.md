@@ -1,8 +1,8 @@
 # 3rdTerm
 
 [![CI](https://github.com/Andrw-404/2nd-term/actions/workflows/ci.yml/badge.svg)](https://github.com/Andrw-404/3rdTerm/actions/workflows/ci.yml)
-[![Лицензия](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Р›РёС†РµРЅР·РёСЏ](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Список заданий
+## РЎРїРёСЃРѕРє Р·Р°РґР°РЅРёР№
 
-### [Задание 1: Параллельное умножение матриц](https://github.com/Andrw-404/3rdTerm/pull/1)
+### [Р—Р°РґР°РЅРёРµ 1: РџР°СЂР°Р»Р»РµР»СЊРЅРѕРµ СѓРјРЅРѕР¶РµРЅРёРµ РјР°С‚СЂРёС†](https://github.com/Andrw-404/3rdTerm/pull/1)
