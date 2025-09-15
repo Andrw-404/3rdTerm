@@ -86,14 +86,14 @@ namespace ParallelMatrixMultiplication
 
             int rows = lines.Length;
 
-            string[] firstRowValues = lines[0].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] firstRowValues = lines[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
             int columnsSize = firstRowValues.Length;
 
             Matrix matrix = new Matrix(rows, columnsSize);
 
             for (int i = 0; i < rows; ++i)
             {
-                string[] values = lines[i].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] values = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 if (values.Length != columnsSize)
                 {
