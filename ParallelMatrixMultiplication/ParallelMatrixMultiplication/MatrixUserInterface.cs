@@ -1,27 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="MatrixUserInterface.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
 
 namespace ParallelMatrixMultiplication
 {
+    using System.Diagnostics;
+
+    /// <summary>
+    /// A user interface class for working with matrix multiplication.
+    /// </summary>
     public class MatrixUserInterface
     {
+        /// <summary>
+        /// Loads matrices from files, performs sequential and parallel multiplication,
+        /// and saves the results to files, as well as additionally measures execution time.
+        /// </summary>
         public static void LoadFromFileAndMultiply()
         {
             Console.WriteLine("\nВведите путь к файлу с первой матрицей: ");
-            string pathA = Console.ReadLine();
-            Console.WriteLine("\nВведите путь к файлу со второй матрицей: ");
-            string pathB = Console.ReadLine();
+            string? pathA = Console.ReadLine();
+            ArgumentNullException.ThrowIfNullOrEmpty(pathA);
 
-            if (string.IsNullOrEmpty(pathA) || string.IsNullOrEmpty(pathB))
-            {
-                Console.WriteLine("Пути к файлам не могут быть пустыми");
-                return;
-            }
+            Console.WriteLine("\nВведите путь к файлу со второй матрицей: ");
+            string? pathB = Console.ReadLine();
+            ArgumentNullException.ThrowIfNullOrEmpty(pathB);
 
             Matrix first = Matrix.LoadFromFile(pathA);
             Matrix second = Matrix.LoadFromFile(pathB);
@@ -32,7 +34,8 @@ namespace ParallelMatrixMultiplication
             Console.WriteLine($"\nПоследовательное умножение завершено. Время: {stopwatch.ElapsedMilliseconds} мс");
 
             Console.WriteLine("\nВведите путь для сохранения результата последовательного умножения: ");
-            string sequentialSavePath = Console.ReadLine();
+            string? sequentialSavePath = Console.ReadLine();
+            ArgumentNullException.ThrowIfNullOrEmpty(sequentialSavePath);
             sequentialResult.SaveToFile(sequentialSavePath);
 
             int numOfThreads = Environment.ProcessorCount;
@@ -43,10 +46,15 @@ namespace ParallelMatrixMultiplication
             Console.WriteLine($"\nПараллельное уммножение завершено. Время: {stopwatch.ElapsedMilliseconds} мс");
 
             Console.WriteLine("\nВведите путь для сохранения результата параллельного умножения: ");
-            string parallelSavePath = Console.ReadLine();
+            string? parallelSavePath = Console.ReadLine();
+            ArgumentNullException.ThrowIfNullOrEmpty(parallelSavePath);
             parallelResult.SaveToFile(parallelSavePath);
         }
 
+        /// <summary>
+        /// Performs performance testing of sequential and parallel matrix multiplication
+        /// for various matrix sizes with a set number of runs.
+        /// </summary>
         public static void UsersMatrixTests()
         {
             Console.WriteLine("Введите количество запусков для каждого теста: ");
@@ -60,13 +68,17 @@ namespace ParallelMatrixMultiplication
             {
                 (100, 100, 100, 100),
                 (200, 200, 200, 200),
-                (300,300,300,300),
-                (400,400,400,400),
-                (500,500,500,500),
+                (300, 300, 300, 300),
+                (400, 400, 400, 400),
+                (500, 500, 500, 500),
             };
 
             Console.WriteLine($"Проведение тестирования с {n} запусками");
-            Console.WriteLine("\nРазмеры матриц | Матожидание(последовательное) | СКО(последовательное) | Матожидание(параллельное) | СКО(параллельное) \n");
+            Console.WriteLine("\nРазмеры матриц | " +
+                "Матожидание(последовательное) | " +
+                "СКО(последовательное) | " +
+                "Матожидание(параллельное) | " +
+                "СКО(параллельное) \n");
 
             foreach (var testCase in testCases)
             {

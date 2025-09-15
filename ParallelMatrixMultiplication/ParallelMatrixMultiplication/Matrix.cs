@@ -1,33 +1,75 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="Matrix.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
 
 namespace ParallelMatrixMultiplication
 {
-    public class Matrix
+    /// <summary>
+    /// A class representing a matrix and operations for working with it.
+    /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="Matrix"/> class.
+    /// </remarks>
+    /// <param name="rows">The number of specified rows.</param>
+    /// <param name="columns">The number of specified columns.</param>
+    public class Matrix(int rows, int columns)
     {
-        public int Rows { get; private set; }
+        /// <summary>
+        /// An array for storing matrix elements.
+        /// </summary>
+        private readonly int[,] numbers = new int[rows, columns];
 
-        public int Columns { get; private set; }
+        /// <summary>
+        /// Gets number of rows in the matrix.
+        /// </summary>
+        public int Rows { get; private set; } = rows;
 
-        private readonly int[,] numbers;
+        /// <summary>
+        /// Gets number of columns in the matrix.
+        /// </summary>
+        public int Columns { get; private set; } = columns;
 
-        public Matrix(int rows, int columns)
-        {
-            this.Rows = rows;
-            this.Columns = columns;
-            this.numbers = new int[rows, columns];
-        }
-
+        /// <summary>
+        /// Indexer for accessing matrix elements.
+        /// </summary>
+        /// <param name="rows">Row index.</param>
+        /// <param name="columns">Column index.</param>
+        /// <returns>The value of the element.</returns>
         public int this[int rows, int columns]
         {
             get => this.numbers[rows, columns];
             set => this.numbers[rows, columns] = value;
         }
 
+        /// <summary>
+        /// A method for generating a matrix with random values.
+        /// </summary>
+        /// <param name="rows">Number of lines.</param>
+        /// <param name="columns">Number of columns.</param>
+        /// <returns>Matrix with random values.</returns>
+        public static Matrix GenerateRandomMatrix(int rows, int columns)
+        {
+            Random random = new Random();
+            Matrix matrix = new Matrix(rows, columns);
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; ++j)
+                {
+                    matrix[i, j] = random.Next(1, 74);
+                }
+            }
+
+            return matrix;
+        }
+
+        /// <summary>
+        /// A method for loading a matrix from a file.
+        /// </summary>
+        /// <param name="filePath">The path to the matrix file.</param>
+        /// <returns>The matrix from the file.</returns>
+        /// <exception cref="FileNotFoundException">It is thrown if the file is not found.</exception>
+        /// <exception cref="InvalidDataException">It is thrown if the file is empty or contains incorrect data.</exception>
+        /// <exception cref="FormatException">It is thrown if the numbers in the file have an incorrect format.</exception>
         public static Matrix LoadFromFile(string filePath)
         {
             if (!File.Exists(filePath))
@@ -72,6 +114,10 @@ namespace ParallelMatrixMultiplication
             return matrix;
         }
 
+        /// <summary>
+        /// A method for saving a matrix to a file.
+        /// </summary>
+        /// <param name="filePath">The path to save the file.</param>
         public void SaveToFile(string filePath)
         {
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -86,21 +132,6 @@ namespace ParallelMatrixMultiplication
                     writer.WriteLine();
                 }
             }
-        }
-
-        public static Matrix GenerateRandomMatrix(int rows, int columns)
-        {
-            Random random = new Random();
-            Matrix matrix = new Matrix(rows, columns);
-            for (int i = 0; i < rows; i++)
-            {
-                for (int j = 0; j < columns; ++j)
-                {
-                    matrix[i, j] = random.Next(1, 74);
-                }
-            }
-
-            return matrix;
         }
     }
 }

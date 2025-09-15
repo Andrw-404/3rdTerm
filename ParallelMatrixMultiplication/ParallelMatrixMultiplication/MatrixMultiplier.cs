@@ -1,14 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// <copyright file="MatrixMultiplier.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
 
 namespace ParallelMatrixMultiplication
 {
+    /// <summary>
+    /// A class for performing matrix multiplication in sequential and parallel ways.
+    /// </summary>
     public class MatrixMultiplier
     {
+        /// <summary>
+        /// Performs sequential multiplication of two matrices(AxB).
+        /// </summary>
+        /// <param name="a">The first matrix.</param>
+        /// <param name="b">The second matrix.</param>
+        /// <returns>The resulting matrix.</returns>
+        /// <exception cref="InvalidDataException">It is thrown if the number of columns of the first
+        /// matrix is not equal to the number of rows of the second.
+        /// </exception>
         public static Matrix SequentialMultiplication(Matrix a, Matrix b)
         {
             if (a.Columns != b.Rows)
@@ -26,6 +35,7 @@ namespace ParallelMatrixMultiplication
                     {
                         sum += a[i, k] * b[k, j];
                     }
+
                     result[i, j] = sum;
                 }
             }
@@ -33,6 +43,16 @@ namespace ParallelMatrixMultiplication
             return result;
         }
 
+        /// <summary>
+        /// Performs parallel multiplication of two matrices(AxB).
+        /// </summary>
+        /// <param name="a">The first matrix.</param>
+        /// <param name="b">The second matrix.</param>
+        /// <param name="numThreads">Number of threads.</param>
+        /// <returns>The resulting matrix.</returns>
+        /// <exception cref="InvalidDataException">It is thrown if the number of columns of the first
+        /// matrix is not equal to the number of rows of the second.
+        /// </exception>
         public static Matrix ParallelMultiplication(Matrix a, Matrix b, int numThreads)
         {
             if (a.Columns != b.Rows)
@@ -68,6 +88,7 @@ namespace ParallelMatrixMultiplication
                 });
                 threads[i].Start();
             }
+
             foreach (var thread in threads)
             {
                 thread.Join();

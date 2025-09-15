@@ -1,11 +1,13 @@
-﻿using ParallelMatrixMultiplication;
-using System.Linq.Expressions;
+﻿// <copyright file="Program.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
+using ParallelMatrixMultiplication;
 
 string? choice;
 
 while (true)
 {
-
     if (args.Length == 0)
     {
         Console.WriteLine("Выберите способ получения матриц:");
