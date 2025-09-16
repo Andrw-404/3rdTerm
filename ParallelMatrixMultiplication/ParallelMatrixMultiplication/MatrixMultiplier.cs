@@ -86,7 +86,11 @@ namespace ParallelMatrixMultiplication
                         }
                     }
                 });
-                threads[i].Start();
+            }
+
+            foreach (var thread in threads)
+            {
+                thread.Start();
             }
 
             foreach (var thread in threads)
