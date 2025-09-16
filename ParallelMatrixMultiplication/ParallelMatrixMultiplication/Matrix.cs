@@ -129,7 +129,10 @@ namespace ParallelMatrixMultiplication
                         writer.Write(this.numbers[i, j] + (j == this.Columns - 1 ? string.Empty : " "));
                     }
 
-                    writer.WriteLine();
+                    if (i < this.Rows - 1)
+                    {
+                        writer.WriteLine();
+                    }
                 }
             }
         }
