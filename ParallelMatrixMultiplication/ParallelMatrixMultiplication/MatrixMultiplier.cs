@@ -66,10 +66,10 @@ namespace ParallelMatrixMultiplication
             Thread[] threads = new Thread[actualNumOfThread];
             int rowsForThread = a.Rows / actualNumOfThread;
 
-            for (int i = 0; i < numThreads; ++i)
+            for (int i = 0; i < actualNumOfThread; ++i)
             {
                 int startRow = i * rowsForThread;
-                int endRow = (i == numThreads - 1) ? a.Rows : (i + 1) * rowsForThread;
+                int endRow = (i == actualNumOfThread - 1) ? a.Rows : (i + 1) * rowsForThread;
 
                 threads[i] = new Thread(() =>
                 {

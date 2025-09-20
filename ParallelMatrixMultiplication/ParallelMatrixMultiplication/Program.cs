@@ -4,53 +4,54 @@
 
 using ParallelMatrixMultiplication;
 
-string? choice;
+args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+var (choice, parameters) = ArgumentParser.Parse(args);
 
-while (true)
+try
 {
-    if (args.Length == 0)
+    switch (choice)
     {
-        Console.WriteLine("Выберите способ получения матриц:");
-        Console.WriteLine("1. Загрузить из файлов");
-        Console.WriteLine("2. Рандомная генерация + тесты");
-        Console.WriteLine("3. Выйти");
-        Console.WriteLine("Выбор: ");
-        choice = Console.ReadLine();
-    }
-    else
-    {
-        choice = args[0];
-    }
-
-    if (string.IsNullOrWhiteSpace(choice))
-    {
-        Console.WriteLine("Выбор не указан");
-        return;
-    }
-
-    try
-    {
-        switch (choice)
-        {
-            case "1":
-                MatrixUserInterface.LoadFromFileAndMultiply();
-                break;
-
-            case "2":
-                MatrixUserInterface.UsersMatrixTests();
-                break;
-
-            case "3":
-                Console.WriteLine("Выход...");
+        case "load":
+            if (parameters.Length < 4)
+            {
+                Console.WriteLine("Недостаточно аргументов. (load <pathA> <pathB> <resultSequential> <resultParallel>)");
                 return;
+            }
 
-            default:
-                Console.WriteLine("\nНеизвестный ввод\n");
-                break;
-        }
+            string pathA = parameters[0];
+            string pathB = parameters[1];
+            string sequentialSavePath = parameters[2];
+            string parallelSavePath = parameters[3];
+
+            ArgumentNullException.ThrowIfNullOrEmpty(pathA);
+            ArgumentNullException.ThrowIfNullOrEmpty(pathB);
+            ArgumentNullException.ThrowIfNullOrEmpty(sequentialSavePath);
+            ArgumentNullException.ThrowIfNullOrEmpty(parallelSavePath);
+            MatrixUserInterface.LoadFromFileAndMultiply(pathA, pathB, sequentialSavePath, parallelSavePath);
+            break;
+
+        case "matrixtest":
+            if (parameters.Length < 1)
+            {
+                Console.WriteLine("Недостаточно аргументов. (matrixtest <n>)");
+                return;
+            }
+
+            if (!int.TryParse(parameters[0], out int n) || n <= 0)
+            {
+                Console.WriteLine("Неверное количество запусков. Ожидается целое положительное число");
+                return;
+            }
+
+            MatrixUserInterface.UsersMatrixTests(n);
+            break;
+
+        default:
+            Console.WriteLine("\nНеизвестный ввод. Ожидается load или matrixtest\n");
+            break;
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Произошла ошибка: {ex.Message}");
-    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Произошла ошибка: {ex.Message}");
 }

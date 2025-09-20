@@ -15,16 +15,12 @@ namespace ParallelMatrixMultiplication
         /// Loads matrices from files, performs sequential and parallel multiplication,
         /// and saves the results to files, as well as additionally measures execution time.
         /// </summary>
-        public static void LoadFromFileAndMultiply()
+        /// <param name="pathA">The path to the first matrix.</param>
+        /// <param name="pathB">The path to the second matrix.</param>
+        /// <param name="sequentialSavePath">The path to the sequential result matrix.</param>
+        /// <param name="parallelSavePath">The path to the parallel result matrix.</param>
+        public static void LoadFromFileAndMultiply(string pathA, string pathB, string sequentialSavePath, string parallelSavePath)
         {
-            Console.WriteLine("\nВведите путь к файлу с первой матрицей: ");
-            string? pathA = Console.ReadLine();
-            ArgumentNullException.ThrowIfNullOrEmpty(pathA);
-
-            Console.WriteLine("\nВведите путь к файлу со второй матрицей: ");
-            string? pathB = Console.ReadLine();
-            ArgumentNullException.ThrowIfNullOrEmpty(pathB);
-
             Matrix first = Matrix.LoadFromFile(pathA);
             Matrix second = Matrix.LoadFromFile(pathB);
 
@@ -33,21 +29,15 @@ namespace ParallelMatrixMultiplication
             stopwatch.Stop();
             Console.WriteLine($"\nПоследовательное умножение завершено. Время: {stopwatch.ElapsedMilliseconds} мс");
 
-            Console.WriteLine("\nВведите путь для сохранения результата последовательного умножения: ");
-            string? sequentialSavePath = Console.ReadLine();
-            ArgumentNullException.ThrowIfNullOrEmpty(sequentialSavePath);
             sequentialResult.SaveToFile(sequentialSavePath);
 
             int numOfThreads = Environment.ProcessorCount;
-            Console.WriteLine("\nПараллельное умножение:");
+            Console.WriteLine($"\nПараллельное умножение c {numOfThreads} потоками:");
             stopwatch.Restart();
             Matrix parallelResult = MatrixMultiplier.ParallelMultiplication(first, second, numOfThreads);
             stopwatch.Stop();
             Console.WriteLine($"\nПараллельное уммножение завершено. Время: {stopwatch.ElapsedMilliseconds} мс");
 
-            Console.WriteLine("\nВведите путь для сохранения результата параллельного умножения: ");
-            string? parallelSavePath = Console.ReadLine();
-            ArgumentNullException.ThrowIfNullOrEmpty(parallelSavePath);
             parallelResult.SaveToFile(parallelSavePath);
         }
 
@@ -55,15 +45,9 @@ namespace ParallelMatrixMultiplication
         /// Performs performance testing of sequential and parallel matrix multiplication
         /// for various matrix sizes with a set number of runs.
         /// </summary>
-        public static void UsersMatrixTests()
+        /// <param name="n">The number of runs for each test.</param>
+        public static void UsersMatrixTests(int n)
         {
-            Console.WriteLine("Введите количество запусков для каждого теста: ");
-            if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
-            {
-                Console.WriteLine("Неверное количество запусков.");
-                return;
-            }
-
             var testCases = new List<(int RowsA, int ColumnsA, int RowsB, int ColumnsB)>()
             {
                 (100, 100, 100, 100),

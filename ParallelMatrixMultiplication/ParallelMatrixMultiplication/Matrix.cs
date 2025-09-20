@@ -74,7 +74,7 @@ namespace ParallelMatrixMultiplication
         {
             if (!File.Exists(filePath))
             {
-                throw new FileNotFoundException("Файл не найден");
+                throw new FileNotFoundException($"Файл {filePath} не найден");
             }
 
             string[] lines = File.ReadAllLines(filePath);
