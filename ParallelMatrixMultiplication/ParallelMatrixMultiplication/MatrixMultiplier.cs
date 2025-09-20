@@ -62,8 +62,9 @@ namespace ParallelMatrixMultiplication
 
             Matrix result = new Matrix(a.Rows, b.Columns);
 
-            Thread[] threads = new Thread[numThreads];
-            int rowsForThread = a.Rows / numThreads;
+            int actualNumOfThread = Math.Min(a.Rows, numThreads);
+            Thread[] threads = new Thread[actualNumOfThread];
+            int rowsForThread = a.Rows / actualNumOfThread;
 
             for (int i = 0; i < numThreads; ++i)
             {
