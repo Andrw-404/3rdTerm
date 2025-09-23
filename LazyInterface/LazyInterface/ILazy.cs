@@ -4,7 +4,7 @@
 
 namespace LazyInterface
 {
-    internal interface ILazy<T>
+    public interface ILazy<T>
     {
         T Get();
     }
