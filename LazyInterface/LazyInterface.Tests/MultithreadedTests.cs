@@ -41,7 +41,6 @@ namespace LazyInterface.Tests
             Assert.That(results.All(res => ReferenceEquals(res, firstResult)), Is.True);
         }
 
-
         [Test]
         public void ConstructorMultithreadVersion_SupplierIsNull_ShouldThrowArgumentNullException()
         {
