@@ -7,7 +7,7 @@ namespace LazyInterface.Tests
     public class SingleThreadedTests
     {
         [Test]
-        public void Get_ShoulCallSupplierOnlyOnceAndReturnCorrectValue_MultipleCalls()
+        public void Get_MultipleCalls_ShoulCallSupplierOnlyOnceAndReturnCorrectValue()
         {
             int callCount = 0;
             Func<string> supplier = () =>
@@ -28,7 +28,7 @@ namespace LazyInterface.Tests
         }
 
         [Test]
-        public void Get_ShoulReturnTheSameObjectReference_MultipleCalls()
+        public void Get_MultipleCalls_ShoulReturnTheSameObjectReference()
         {
             var lazy = new SimpleVersion<List<string>>(() => []);
 
@@ -38,7 +38,7 @@ namespace LazyInterface.Tests
         }
 
         [Test]
-        public void Constructor_ShouldThrowArgumentNullException_SupplierIsNull()
+        public void ConstructorSingleThreadVersion_SupplierIsNull_ShouldThrowArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new SimpleVersion<object>(null!));
         }
