@@ -6,3 +6,5 @@
 ## Список заданий
 
 ### [Задание 1: Параллельное умножение матриц](https://github.com/Andrw-404/3rdTerm/pull/1)
+
+### [Задание 2: Lazy](https://github.com/Andrw-404/3rdTerm/pull/2)
