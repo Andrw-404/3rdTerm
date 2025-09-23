@@ -14,10 +14,7 @@ namespace LazyInterface
 
         public MultithreadedVersion(Func<T> supplier)
         {
-            if (supplier is null)
-            {
-                ArgumentNullException.ThrowIfNull(supplier);
-            }
+            ArgumentNullException.ThrowIfNull(supplier);
 
             this.supplier = supplier;
         }

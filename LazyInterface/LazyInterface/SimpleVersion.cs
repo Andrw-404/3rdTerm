@@ -14,10 +14,7 @@ namespace LazyInterface
 
         public SimpleVersion(Func<T> supplier)
         {
-            if (supplier is null)
-            {
-                ArgumentNullException.ThrowIfNull(supplier);
-            }
+            ArgumentNullException.ThrowIfNull(supplier);
 
             this.supplier = supplier;
             this.flag = false;
