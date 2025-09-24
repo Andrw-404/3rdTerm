@@ -42,6 +42,24 @@ namespace LazyInterface.Tests
         }
 
         [Test]
+        public void GetFromMultithreadedVersion_SupplierReturnsNull_ShouldReturnNull()
+        {
+            int callCount = 0;
+            var lazy = new MultithreadedVersion<object>(() =>
+            {
+                callCount++;
+                return null;
+            });
+
+            var result1 = lazy.Get();
+            var result2 = lazy.Get();
+
+            Assert.That(callCount, Is.EqualTo(1));
+            Assert.That(result1, Is.Null);
+            Assert.That(result2, Is.Null);
+        }
+
+        [Test]
         public void ConstructorMultithreadVersion_SupplierIsNull_ShouldThrowArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new MultithreadedVersion<object>(null!));
