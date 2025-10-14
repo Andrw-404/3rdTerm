@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyThreadPoolTask
+﻿namespace MyThreadPoolTask
 {
     public class MyThreadPool
     {
@@ -15,6 +9,8 @@ namespace MyThreadPoolTask
         private readonly object queueLock = new();
 
         private readonly CancellationTokenSource cancellationTokenSource = new();
+
+        private volatile bool isShutdown = false;
 
 
         public MyThreadPool(int threadCount)
@@ -65,19 +61,53 @@ namespace MyThreadPoolTask
             }
         }
 
-        private void EnqueueAction(Action action)
+        public IMyTask<TResult> Submit<TResult>(Func<TResult> func)
+        {
+            if (this.isShutdown)
+            {
+                throw new InvalidOperationException("Пул остановлен");
+            }
+            ArgumentNullException.ThrowIfNull(func, nameof(func));
+
+            var task = new MyTask<TResult>(func, this);
+            this.EnqueueAction(task.Execute);
+            return task;
+        }
+        internal void EnqueueAction(Action action)
         {
             lock (this.queueLock)
             {
-                if (this.cancellationTokenSource.IsCancellationRequested)
+                if (this.isShutdown)
                 {
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Пул останолен");
                 }
 
-               this.taskQueue.Enqueue(action);
+                this.taskQueue.Enqueue(action);
 
                 Monitor.Pulse(this.queueLock);
             }
+        }
+
+        public void Shutdown()
+        {
+            if (this.cancellationTokenSource.IsCancellationRequested && this.isShutdown)
+            {
+                return;
+            }
+
+            this.isShutdown = true;
+            this.cancellationTokenSource.Cancel();
+            lock (this.queueLock)
+            {
+                Monitor.PulseAll(this.queueLock);
+            }
+
+            foreach (var workerThread in this.workers)
+            {
+                workerThread.Join();
+            }
+
+            this.cancellationTokenSource.Dispose();
         }
 
         private class MyTask<TResult> : IMyTask<TResult>
@@ -96,6 +126,7 @@ namespace MyThreadPoolTask
             public MyTask(Func<TResult> func, MyThreadPool pool)
             {
                 ArgumentNullException.ThrowIfNull(func);
+                ArgumentNullException.ThrowIfNull(pool);
                 this.func = func;
                 this.pool = pool;
             }
@@ -124,40 +155,45 @@ namespace MyThreadPoolTask
                     throw new InvalidOperationException();
                 }
 
-                var nextTask = new MyTask<TNewResult>(() =>
-                {
-                    var sourceResult = this.Result;
-                    return next(sourceResult);
-                }, pool);
-
                 lock (this.taskLock)
                 {
-                    if (this.pool.cancellationTokenSource.IsCancellationRequested)
+                    if (this.pool.cancellationTokenSource.IsCancellationRequested && this.pool.isShutdown)
                     {
                         throw new InvalidOperationException();
                     }
 
+                    var nextTask = new MyTask<TNewResult>(() =>
+                    {
+                        var currentResult = this.Result;
+                        return next(currentResult);
+                    }, this.pool);
+
                     if (this.IsCompleted)
                     {
-                        this.pool.EnqueueAction(nextTask.Execute);
+                        try
+                        {
+                            this.pool.EnqueueAction(nextTask.Execute);
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            throw new InvalidOperationException("Пул остановлен");
+                        }
                     }
+
                     else
                     {
                         this.followUpActions.Add(nextTask.Execute);
                     }
-                }
 
-                return nextTask;
+                    return nextTask;
+                }
             }
 
             internal void Execute()
             {
                 try
                 {
-                    if (this.func != null)
-                    {
-                        this.result = this.func();
-                    }
+                    this.result = this.func();
                 }
                 catch (Exception exception)
                 {
@@ -178,7 +214,7 @@ namespace MyThreadPoolTask
                             {
                                 this.pool.EnqueueAction(action);
                             }
-                            catch(InvalidOperationException)
+                            catch (InvalidOperationException)
                             {
 
                             }
@@ -187,6 +223,6 @@ namespace MyThreadPoolTask
                     }
                 }
             }
-        };
+        }
     }
 }
