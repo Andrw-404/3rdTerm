@@ -40,11 +40,11 @@ namespace Server
             Console.WriteLine("Client connected");
             try
             {
-                await using (NetworkStream stream = client.GetStream())
-                using (var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true))
-                await using (var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true))
+                await using NetworkStream stream = client.GetStream();
+                using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
                 {
-                    string line = string.Empty;
+                    string? line = string.Empty;
                     while ((line = await reader.ReadLineAsync()) != null)
                     {
                         Console.WriteLine($"Request: {line}");
@@ -57,11 +57,21 @@ namespace Server
                         string command = parts[0];
                         string path = parts[1];
 
-                        string fullPath = string.Empty;
-                        if (!this.logicOfServer.IsPathSafe(path, fullPath))
+                        if (!this.logicOfServer.IsPathSafe(path, out string? fullPath) || fullPath == null)
                         {
-                            Console.WriteLine($"Wrong path {fullPath}");
-                            await writer.WriteLineAsync("-1");
+                            Console.WriteLine($"access denied {path}");
+                            switch (command)
+                            {
+                                case "1":
+                                    await writer.WriteLineAsync("-1");
+                                    break;
+                                case "2":
+                                    await writer.FlushAsync();
+                                    byte[] errorBytes = BitConverter.GetBytes(-1L);
+                                    await stream.WriteAsync(errorBytes);
+                                    break;
+                            }
+
                             continue;
                         }
 
@@ -78,10 +88,12 @@ namespace Server
                                 await writer.WriteLineAsync("-1");
                                 break;
                         }
+
+                        await writer.FlushAsync();
                     }
                 }
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 Console.WriteLine($"Error handling client {exception.Message}");
             }

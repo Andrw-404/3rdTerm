@@ -1,21 +1,24 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 
 namespace Server
 {
     public class LogicOfServer
     {
         private string baseDirectory;
-        private string fullPath;
 
         public LogicOfServer(string baseDirectory)
         {
-            this.baseDirectory = baseDirectory;
+            this.baseDirectory = Path.GetFullPath(baseDirectory);
         }
 
-        public bool IsPathSafe(string requestedPath, string fullPath)
+        public bool IsPathSafe(string requestedPath, out string? fullPath)
         {
-            this.fullPath = Path.GetFullPath(this.baseDirectory, requestedPath);
+
+            string combinedPath = Path.Combine(this.baseDirectory, requestedPath);
+            fullPath = Path.GetFullPath(combinedPath);
             return fullPath.StartsWith(this.baseDirectory, StringComparison.OrdinalIgnoreCase);
+  
         }
 
         public async Task List(StreamWriter streamwriter, string directoryPath)
@@ -37,7 +40,7 @@ namespace Server
 
                 foreach (var data in filesAndFolders)
                 {
-                    response.Append($"{data.Name} {(data is FileInfo ? "true" : "false")}");
+                    response.Append($" {data.Name} {(data is DirectoryInfo ? "true" : "false")}");
                 }
 
                 await streamwriter.WriteLineAsync(response.ToString());
@@ -56,7 +59,7 @@ namespace Server
             if (!file.Exists)
             {
                 byte[] errorInBytes = BitConverter.GetBytes(-1L);
-                await stream.WriteAsync(errorInBytes, 0, errorInBytes.Length);
+                await stream.WriteAsync(errorInBytes);
                 return;
             }
 
@@ -64,7 +67,7 @@ namespace Server
             {
                 long fileSize = file.Length;
                 byte[] sizeBytes = BitConverter.GetBytes(fileSize);
-                await stream.WriteAsync(sizeBytes, 0, sizeBytes.Length);
+                await stream.WriteAsync(sizeBytes);
 
                 await using (FileStream fileStream = file.OpenRead())
                 {
