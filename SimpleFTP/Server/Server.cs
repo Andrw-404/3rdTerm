@@ -1,107 +1,121 @@
-﻿using System.Net;
+﻿// <copyright file="Server.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
+namespace SimpleFTP.Server;
+
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Server
+/// <summary>
+/// The main server class that manages listening for connections and client processing.
+/// </summary>
+public class Server
 {
-    public class ServerClass
+    private const int Port = 8888;
+    private readonly TcpListener listener;
+    private readonly LogicOfServer logicOfServer;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Server"/> class.
+    /// </summary>
+    /// <param name="baseDirectory">The base directory for file operations.</param>
+    public Server(string baseDirectory)
     {
-        private const int Port = 8888;
-        private readonly TcpListener listener;
-        private readonly LogicOfServer logicOfServer;
+        this.listener = new TcpListener(IPAddress.Any, Port);
+        this.logicOfServer = new LogicOfServer(baseDirectory);
+    }
 
-        public ServerClass(string baseDirectory)
+    /// <summary>
+    /// Starts listening for incoming connections and creates tasks for processing each client.
+    /// </summary>
+    /// <returns>A task representing an asynchronous server operation.</returns>
+    public async Task Start()
+    {
+        this.listener.Start();
+        Console.WriteLine($"Listening on port {Port}...");
+
+        while (true)
         {
-            this.listener = new TcpListener(IPAddress.Any, Port);
-            this.logicOfServer = new LogicOfServer(baseDirectory);
-        }
-
-        public async Task Start()
-        {
-            this.listener.Start();
-            Console.WriteLine($"Listening on port {Port}...");
-
-            while (true)
-            {
-                try
-                {
-                    TcpClient client = await this.listener.AcceptTcpClientAsync();
-                    Task clientTask = Task.Run(() => this.ClientHandler(client));
-                }
-                catch (Exception exception)
-                {
-                    Console.WriteLine($"Error accepting client {exception.Message}");
-                }
-            }
-        }
-
-        private async Task ClientHandler(TcpClient client)
-        {
-            Console.WriteLine("Client connected");
             try
             {
-                await using NetworkStream stream = client.GetStream();
-                using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-                await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
-                {
-                    string? line = string.Empty;
-                    while ((line = await reader.ReadLineAsync()) != null)
-                    {
-                        Console.WriteLine($"Request: {line}");
-                        string[] parts = line.Split(' ', 2);
-                        if (parts.Length < 2)
-                        {
-                            continue;
-                        }
-
-                        string command = parts[0];
-                        string path = parts[1];
-
-                        if (!this.logicOfServer.IsPathSafe(path, out string? fullPath) || fullPath == null)
-                        {
-                            Console.WriteLine($"access denied {path}");
-                            switch (command)
-                            {
-                                case "1":
-                                    await writer.WriteLineAsync("-1");
-                                    break;
-                                case "2":
-                                    await writer.FlushAsync();
-                                    byte[] errorBytes = BitConverter.GetBytes(-1L);
-                                    await stream.WriteAsync(errorBytes);
-                                    break;
-                            }
-
-                            continue;
-                        }
-
-                        switch (command)
-                        {
-                            case "1":
-                                await this.logicOfServer.List(writer, fullPath);
-                                break;
-                            case "2":
-                                await writer.FlushAsync();
-                                await this.logicOfServer.Get(stream, fullPath);
-                                break;
-                            default:
-                                await writer.WriteLineAsync("-1");
-                                break;
-                        }
-
-                        await writer.FlushAsync();
-                    }
-                }
+                TcpClient client = await this.listener.AcceptTcpClientAsync();
+                Task clientTask = Task.Run(() => this.ClientHandler(client));
             }
             catch (Exception exception)
             {
-                Console.WriteLine($"Error handling client {exception.Message}");
+                Console.WriteLine($"Error accepting client {exception.Message}");
             }
-            finally
+        }
+    }
+
+    private async Task ClientHandler(TcpClient client)
+    {
+        Console.WriteLine("Client connected");
+        try
+        {
+            await using NetworkStream stream = client.GetStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+            await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
             {
-                client.Close();
-                Console.WriteLine("Client disconnected");
+                string? line = string.Empty;
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    Console.WriteLine($"Request: {line}");
+                    string[] parts = line.Split(' ', 2);
+                    if (parts.Length < 2)
+                    {
+                        continue;
+                    }
+
+                    string command = parts[0];
+                    string path = parts[1];
+
+                    if (!this.logicOfServer.IsPathSafe(path, out string? fullPath) || fullPath == null)
+                    {
+                        Console.WriteLine($"access denied {path}");
+                        switch (command)
+                        {
+                            case "1":
+                                await writer.WriteLineAsync("-1");
+                                break;
+                            case "2":
+                                await writer.FlushAsync();
+                                byte[] errorBytes = BitConverter.GetBytes(-1L);
+                                await stream.WriteAsync(errorBytes);
+                                break;
+                        }
+
+                        continue;
+                    }
+
+                    switch (command)
+                    {
+                        case "1":
+                            await this.logicOfServer.List(writer, fullPath);
+                            break;
+                        case "2":
+                            await writer.FlushAsync();
+                            await this.logicOfServer.Get(stream, fullPath);
+                            break;
+                        default:
+                            await writer.WriteLineAsync("-1");
+                            break;
+                    }
+
+                    await writer.FlushAsync();
+                }
             }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"Error handling client {exception.Message}");
+        }
+        finally
+        {
+            client.Close();
+            Console.WriteLine("Client disconnected");
         }
     }
 }

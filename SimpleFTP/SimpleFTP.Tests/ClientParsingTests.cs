@@ -1,4 +1,8 @@
-﻿namespace SimpleFTP.Tests;
+﻿// <copyright file="ClientParsingTests.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
+namespace SimpleFTP.Tests;
 
 public class ClientParsingTests
 {
