@@ -16,6 +16,8 @@ public class Server
     private const int Port = 8888;
     private readonly TcpListener listener;
     private readonly LogicOfServer logicOfServer;
+    private CancellationTokenSource cts;
+    private bool isWorking;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Server"/> class.
@@ -34,20 +36,49 @@ public class Server
     public async Task Start()
     {
         this.listener.Start();
+        this.isWorking = true;
         Console.WriteLine($"Listening on port {Port}...");
 
-        while (true)
+        while (this.isWorking)
         {
             try
             {
-                TcpClient client = await this.listener.AcceptTcpClientAsync();
+                TcpClient client = await this.listener.AcceptTcpClientAsync(this.cts.Token);
                 Task clientTask = Task.Run(() => this.ClientHandler(client));
+            }
+            catch (OperationCanceledException)
+            {
+                break;
             }
             catch (Exception exception)
             {
+                if (!this.isWorking)
+                {
+                    break;
+                }
                 Console.WriteLine($"Error accepting client {exception.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// Initiates the server shutdown process by closing listener and canceling all pending operations.
+    /// </summary>
+    public void Stop()
+    {
+        this.isWorking = false;
+        this.cts?.Cancel();
+        this.listener?.Stop();
+    }
+
+    /// <summary>
+    /// Frees up resources.
+    /// </summary>
+    public void Dispose()
+    {
+        this.Stop();
+        this.listener?.Dispose();
+        this.cts?.Dispose();
     }
 
     private async Task ClientHandler(TcpClient client)
