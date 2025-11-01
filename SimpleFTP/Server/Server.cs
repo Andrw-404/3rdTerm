@@ -27,6 +27,7 @@ public class Server
     {
         this.listener = new TcpListener(IPAddress.Any, Port);
         this.logicOfServer = new LogicOfServer(baseDirectory);
+        this.cts = new CancellationTokenSource();
     }
 
     /// <summary>
@@ -56,6 +57,7 @@ public class Server
                 {
                     break;
                 }
+
                 Console.WriteLine($"Error accepting client {exception.Message}");
             }
         }
