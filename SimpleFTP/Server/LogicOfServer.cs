@@ -86,6 +86,7 @@ public class LogicOfServer
         {
             byte[] errorInBytes = BitConverter.GetBytes(-1L);
             await stream.WriteAsync(errorInBytes);
+            await stream.FlushAsync();
             return;
         }
 
@@ -94,6 +95,7 @@ public class LogicOfServer
             long fileSize = file.Length;
             byte[] sizeBytes = BitConverter.GetBytes(fileSize);
             await stream.WriteAsync(sizeBytes);
+            await stream.FlushAsync();
 
             await using (FileStream fileStream = file.OpenRead())
             {
