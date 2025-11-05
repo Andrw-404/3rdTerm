@@ -91,6 +91,28 @@ public class ServerTests
         Assert.That(response, Is.EqualTo("-1"));
     }
 
+    [Test]
+    public async Task Get_ValidTextFile_ShouldReturnCorrectContent()
+    {
+        var (size, data) = await this.PerformGet("file.txt");
+        string received = Encoding.UTF8.GetString(data);
+        Assert.That(received, Is.EqualTo(TestTextData));
+    }
+
+    [Test]
+    public async Task Get_ValidBinaryFile_ShouldReturnCorrectContent()
+    {
+        var (size, data) = await this.PerformGet("file.bin");
+        Assert.That(data, Is.EqualTo(this.IntToBytes(this.testIntData)));
+    }
+
+    [Test]
+    public async Task Get_FileInSubFolder_ShouldReturnCorrectContent()
+    {
+        var (size, data) = await this.PerformGet("Folder/FileInFolder.txt");
+        Assert.That(data, Is.EqualTo("qwerty"));
+    }
+
     private async Task<string?> PerformList(string path)
     {
         using var client = new TcpClient();
@@ -101,6 +123,48 @@ public class ServerTests
 
         await writer.WriteLineAsync($"1 {path}");
         return await reader.ReadLineAsync();
+    }
+
+    private async Task<(long Size, byte[] Data)> PerformGet(string path)
+    {
+        using var client = new TcpClient();
+        await client.ConnectAsync(IP, PORT);
+        await using var stream = client.GetStream();
+
+        string command = $"2 {path}\n";
+        byte[] commandBytes = Encoding.UTF8.GetBytes(command);
+        await stream.WriteAsync(commandBytes);
+        await stream.FlushAsync();
+
+        await Task.Delay(100);
+
+        byte[] sizeBuffer = new byte[8];
+
+        await stream.ReadExactlyAsync(sizeBuffer, 0, 8);
+        long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
+
+        if (fileSize == -1)
+        {
+            return (-1L, Array.Empty<byte>());
+        }
+
+        using var memoryStream = new MemoryStream();
+        byte[] buffer = new byte[81920];
+        long totalBytesRead = 0;
+        while (totalBytesRead < fileSize)
+        {
+            int bytesToRead = (int)Math.Min(fileSize - totalBytesRead, buffer.Length);
+            int bytesRead = await stream.ReadAsync(buffer, 0, bytesToRead);
+            if (bytesRead == 0)
+            {
+                throw new EndOfStreamException("Connection closed");
+            }
+
+            await memoryStream.WriteAsync(buffer, 0, bytesRead);
+            totalBytesRead += bytesRead;
+        }
+
+        return (fileSize, memoryStream.ToArray());
     }
 
     private byte[] IntToBytes(int[] data)
