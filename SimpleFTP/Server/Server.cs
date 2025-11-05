@@ -112,11 +112,13 @@ public class Server
                         {
                             case "1":
                                 await writer.WriteLineAsync("-1");
+                                await writer.FlushAsync();
                                 break;
                             case "2":
                                 await writer.FlushAsync();
                                 byte[] errorBytes = BitConverter.GetBytes(-1L);
                                 await stream.WriteAsync(errorBytes);
+                                await stream.FlushAsync();
                                 break;
                         }
 
