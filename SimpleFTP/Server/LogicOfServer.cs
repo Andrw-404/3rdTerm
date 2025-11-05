@@ -102,6 +102,8 @@ public class LogicOfServer
                 await fileStream.CopyToAsync(stream);
             }
 
+            await stream.FlushAsync();
+
             Console.WriteLine($"Sent file ({filePath}) ({fileSize} bytes)");
         }
         catch (Exception exception)
