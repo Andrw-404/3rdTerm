@@ -89,12 +89,18 @@ public class Server
         try
         {
             await using NetworkStream stream = client.GetStream();
-            using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
-            await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
             {
                 string? line = string.Empty;
-                while ((line = await reader.ReadLineAsync()) != null)
+                while (true)
                 {
+                    using var reader = new StreamReader(stream, Encoding.UTF8, leaveOpen: true);
+                    await using var writer = new StreamWriter(stream, Encoding.UTF8, leaveOpen: true);
+                    line = await reader.ReadLineAsync();
+                    if (line == null)
+                    {
+                        break;
+                    }
+
                     Console.WriteLine($"Request: {line}");
                     string[] parts = line.Split(' ', 2);
                     if (parts.Length < 2)
@@ -115,7 +121,6 @@ public class Server
                                 await writer.FlushAsync();
                                 break;
                             case "2":
-                                await writer.FlushAsync();
                                 byte[] errorBytes = BitConverter.GetBytes(-1L);
                                 await stream.WriteAsync(errorBytes);
                                 await stream.FlushAsync();
@@ -129,17 +134,16 @@ public class Server
                     {
                         case "1":
                             await this.logicOfServer.List(writer, fullPath);
+                            await writer.FlushAsync();
                             break;
                         case "2":
-                            await writer.FlushAsync();
                             await this.logicOfServer.Get(stream, fullPath);
                             break;
                         default:
                             await writer.WriteLineAsync("-1");
+                            await writer.FlushAsync();
                             break;
                     }
-
-                    await writer.FlushAsync();
                 }
             }
         }
