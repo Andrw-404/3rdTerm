@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Attributes/Attributes.csproj" />
+  <Project Path="MyNUnit/MyNUnit.csproj" />
+</Solution>
