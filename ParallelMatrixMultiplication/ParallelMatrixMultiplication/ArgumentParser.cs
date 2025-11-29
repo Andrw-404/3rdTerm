@@ -2,23 +2,22 @@
 // Copyright (c) Kalinin Andrew. All rights reserved.
 // </copyright>
 
-namespace ParallelMatrixMultiplication
+namespace ParallelMatrixMultiplication;
+
+/// <summary>
+/// A class for working with command line arguments.
+/// </summary>
+public static class ArgumentParser
 {
     /// <summary>
-    /// A class for working with command line arguments.
+    /// Analyzes the command line arguments and determines the execution mode.
     /// </summary>
-    public static class ArgumentParser
+    /// <param name="args">An array of command line arguments.</param>
+    /// <returns>A tuple containing the execution mode and an array of parameters.</returns>
+    public static (string Mode, string[] Parametrs) Parse(string[] args)
     {
-        /// <summary>
-        /// Analyzes the command line arguments and determines the execution mode.
-        /// </summary>
-        /// <param name="args">An array of command line arguments.</param>
-        /// <returns>A tuple containing the execution mode and an array of parameters.</returns>
-        public static (string Mode, string[] Parametrs) Parse(string[] args)
-        {
-            string mode = args[0].ToLower();
-            string[] parametrs = args.Skip(1).ToArray();
-            return (mode, parametrs);
-        }
+        string mode = args[0].ToLower();
+        string[] parametrs = args.Skip(1).ToArray();
+        return (mode, parametrs);
     }
 }
