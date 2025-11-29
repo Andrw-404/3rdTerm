@@ -59,7 +59,7 @@ public class TestsParallelMultiply
     [Test]
     public void ParallelMultiplication_SquareMatrices_ShouldReturnExpectedResult()
     {
-        var result = MatrixMultiplier.ParallelMultiplication(this.testMatrixA2x2, this.testMatrixB2x2, 4);
+        var result = MatrixMultiplier.ParallelMultiplication(this.testMatrixA2x2, this.testMatrixB2x2, Environment.ProcessorCount);
         for (int i = 0; i < result.Rows; ++i)
         {
             for (int j = 0; j < result.Columns; ++j)
@@ -72,7 +72,7 @@ public class TestsParallelMultiply
     [Test]
     public void ParallelMultiplication_NotSquareMatrices_ShouldReturnExpectedResult()
     {
-        var result = MatrixMultiplier.ParallelMultiplication(this.testMatrixA2x3, this.testMatrixB3x2, 4);
+        var result = MatrixMultiplier.ParallelMultiplication(this.testMatrixA2x3, this.testMatrixB3x2, Environment.ProcessorCount);
         for (int i = 0; i < result.Rows; ++i)
         {
             for (int j = 0; j < result.Columns; ++j)
