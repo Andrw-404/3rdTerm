@@ -1,11 +1,46 @@
-﻿namespace MyNUnit.Tests
+﻿namespace MyNUnit.Tests;
+
+using MyTestAttribute = Attributes.TestAttribute;
+using MyBeforeAttribute = Attributes.BeforeAttribute;
+using MyAfterAttribute = Attributes.AfterAttribute;
+using MyBeforeClassAttribute = Attributes.BeforeClassAttribute;
+using MyAfterClassAttribute = Attributes.AfterClassAttribute;
+
+public class TestsForTest
 {
-    public class Tests
+    [MyTest]
+    public void PassingTest()
     {
-        [Test]
-        public void Test1()
-        {
-            Assert.Pass();
-        }
+    }
+
+    [MyTest]
+    public void FailingTest()
+    {
+        throw new Exception("aaa");
+    }
+
+    [MyTest(Ignore = "qqq")]
+    public void IgnoredTest()
+    {
+    }
+}
+
+public class ExceptionTest
+{
+    [MyTest(Expected = typeof(ArgumentException))]
+    public void ThrowsExpectedException()
+    {
+        throw new ArgumentException();
+    }
+
+    [MyTest(Expected = typeof(ArithmeticException))]
+    public void ThrowsDifferentException()
+    {
+        throw new ArgumentNullException();
+    }
+
+    [MyTest(Expected = typeof(ArithmeticException))]
+    public void DoesntThrowException()
+    {
     }
 }
