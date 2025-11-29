@@ -1,12 +1,23 @@
-﻿namespace MyNUnit;
+﻿// <copyright file="TestRunner.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
 
+namespace MyNUnit;
+
+using Attributes;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
-using Attributes;
 
+/// <summary>
+/// The main class responsible for detecting, executing, and delivering tests.
+/// </summary>
 public class TestRunner
 {
+    /// <summary>
+    /// Scans the specified path for the DLL, downloads the assemblies, and runs all the detected tests.
+    /// </summary>
+    /// <param name="path">The path to the directory to search for assemblies.</param>
     public void RunTest(string path)
     {
         var dlls = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
@@ -21,7 +32,7 @@ public class TestRunner
 
                 Parallel.ForEach(testClasses, (testClass) =>
                 {
-                    RunTestsInClass(testClass, results);
+                    this.RunTestsInClass(testClass, results);
                 });
             }
             catch (Exception exception)
@@ -31,10 +42,9 @@ public class TestRunner
         });
 
         this.Print(results);
-
     }
 
-    private bool RunStaticMethods(Type type, Type attributeType, out string error)
+    private bool RunStaticMethods(Type type, Type attributeType, out string? error)
     {
         var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static).Where(x => x.GetCustomAttribute(attributeType) != null);
 
@@ -57,7 +67,7 @@ public class TestRunner
 
     private void RunSingleTest(Type testClass, MethodInfo methodInfo, ConcurrentBag<TestResult> results)
     {
-        var attribute = methodInfo.GetCustomAttribute<TestAttribute>();
+        var attribute = methodInfo.GetCustomAttribute<TestAttribute>()!;
         var result = new TestResult
         {
             ClassName = testClass.Name,
@@ -74,12 +84,12 @@ public class TestRunner
         }
 
         var stopwatch = Stopwatch.StartNew();
-        object instance = null;
+        object? instance = null;
 
         try
         {
             instance = Activator.CreateInstance(testClass);
-            RunBeforeAndAfterMethods(testClass, instance, typeof(BeforeAttribute));
+            this.RunBeforeAndAfterMethods(testClass, instance!, typeof(BeforeAttribute));
 
             try
             {
@@ -97,26 +107,27 @@ public class TestRunner
             catch (TargetInvocationException targetInvocationException)
             {
                 var ex = targetInvocationException.InnerException;
-                if (attribute.Expected != null && attribute.Expected.IsInstanceOfType(ex))
+                if (attribute.Expected != null && attribute.Expected.IsInstanceOfType(ex) && ex != null)
                 {
                     result.IsSuccess = true;
                 }
                 else
                 {
                     result.IsSuccess = false;
-                    result.ErrorMessage = $"{ex.GetType().Name}: {ex.Message}";
+                    result.ErrorMessage = $"{ex?.GetType().Name ?? "Unknown exception"}: {ex?.Message ?? "No details"}";
                 }
             }
 
-            RunBeforeAndAfterMethods(testClass, instance, typeof(AfterAttribute));
+            this.RunBeforeAndAfterMethods(testClass, instance!, typeof(AfterAttribute));
         }
-        catch
+        catch (Exception ex)
         {
             result.IsSuccess = false;
+            result.ErrorMessage = result.ErrorMessage ?? $" {ex.Message}";
         }
         finally
         {
-            stopwatch.Stop(); 
+            stopwatch.Stop();
             result.TestTime = stopwatch.Elapsed;
             results.Add(result);
         }
@@ -132,7 +143,7 @@ public class TestRunner
             {
                 method.Invoke(instance, null);
             }
-            catch (TargetInvocationException exception)
+            catch (TargetInvocationException)
             {
                 throw;
             }
@@ -141,9 +152,9 @@ public class TestRunner
 
     private void RunTestsInClass(Type testClass, ConcurrentBag<TestResult> results)
     {
-        if (!RunStaticMethods(testClass, typeof(BeforeClassAttribute), out string beforeClassError))
+        if (!this.RunStaticMethods(testClass, typeof(BeforeClassAttribute), out string? beforeClassError))
         {
-            FailAllTests(testClass, results, $"{beforeClassError}");
+            this.FailAllTests(testClass, results, $"{beforeClassError}");
             return;
         }
 
@@ -151,10 +162,10 @@ public class TestRunner
 
         foreach (var testMethod in testMethods)
         {
-            RunSingleTest(testClass, testMethod, results);
+            this.RunSingleTest(testClass, testMethod, results);
         }
 
-        RunStaticMethods(testClass, typeof(AfterClassAttribute), out _);
+        this.RunStaticMethods(testClass, typeof(AfterClassAttribute), out _);
     }
 
     private void FailAllTests(Type testClass, ConcurrentBag<TestResult> results, string reason)

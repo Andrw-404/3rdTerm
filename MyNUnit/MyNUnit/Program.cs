@@ -1,4 +1,8 @@
-﻿using MyNUnit;
+﻿// <copyright file="Program.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
+using MyNUnit;
 
 if (args.Length == 0)
 {
@@ -6,7 +10,7 @@ if (args.Length == 0)
     return;
 }
 
-string path = args[0]; 
+string path = args[0];
 if (!Directory.Exists(path))
 {
     Console.WriteLine($"Папка {path} не найдена");
