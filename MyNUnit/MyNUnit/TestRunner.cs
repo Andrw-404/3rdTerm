@@ -18,7 +18,8 @@ public class TestRunner
     /// Scans the specified path for the DLL, downloads the assemblies, and runs all the detected tests.
     /// </summary>
     /// <param name="path">The path to the directory to search for assemblies.</param>
-    public void RunTest(string path)
+    /// <returns>List of results.</returns>
+    public List<TestResult> RunTest(string path)
     {
         var dlls = Directory.GetFiles(path, "*.dll", SearchOption.AllDirectories);
         var results = new ConcurrentBag<TestResult>();
@@ -42,6 +43,7 @@ public class TestRunner
         });
 
         this.Print(results);
+        return results.ToList();
     }
 
     private bool RunStaticMethods(Type type, Type attributeType, out string? error)
