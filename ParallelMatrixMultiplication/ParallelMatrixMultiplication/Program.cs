@@ -5,6 +5,12 @@
 using ParallelMatrixMultiplication;
 
 args = Environment.GetCommandLineArgs().Skip(1).ToArray();
+
+if (args.Length == 0)
+{
+    Console.WriteLine("\n Укажите режим работы ('load' или 'matrixTest')");
+    return;
+}
 var (choice, parameters) = ArgumentParser.Parse(args);
 
 try

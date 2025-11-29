@@ -16,6 +16,11 @@ public static class ArgumentParser
     /// <returns>A tuple containing the execution mode and an array of parameters.</returns>
     public static (string Mode, string[] Parametrs) Parse(string[] args)
     {
+        if (args == null || args.Length == 0)
+        {
+            throw new ArgumentException("Укажите режим работы ('load' или 'matrixTest')");
+        }
+
         string mode = args[0].ToLower();
         string[] parametrs = args.Skip(1).ToArray();
         return (mode, parametrs);
