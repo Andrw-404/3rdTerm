@@ -197,21 +197,21 @@ public class TestRunner
         Console.WriteLine($"Успешно {passed.Count}");
         foreach (var result in passed)
         {
-            Console.WriteLine($" {result.ClassName}.{result.MethodName} ({result.TestTime.TotalMilliseconds:F5} мс)");
+            Console.WriteLine($" {result.ClassName}.{result.MethodName} ({result.TestTime.TotalMilliseconds:F2} мс)");
         }
 
         Console.ForegroundColor = ConsoleColor.Red;
         Console.WriteLine($"\b Провалено {failed.Count}");
         foreach (var result in failed)
         {
-            Console.WriteLine($" {result.ClassName}.{result.MethodName} ({result.TestTime.TotalMilliseconds:F5} мс) \n ОШИБКА: {result.ErrorMessage}");
+            Console.WriteLine($" {result.ClassName}.{result.MethodName} ({result.TestTime.TotalMilliseconds:F2} мс) \n ОШИБКА: {result.ErrorMessage}");
         }
 
         Console.ForegroundColor = ConsoleColor.Yellow;
         Console.WriteLine($"Проигнорировано {ignored.Count}");
         foreach (var result in ignored)
         {
-            Console.WriteLine($" Пропущен {result.ClassName}.{result.MethodName} по причине {result.IgnoreReason}");
+            Console.WriteLine($" Пропущен {result.ClassName}.{result.MethodName} по причине {result.IgnoreReason}  ({result.TestTime.TotalMilliseconds:F2} мс)");
         }
 
         Console.ResetColor();
