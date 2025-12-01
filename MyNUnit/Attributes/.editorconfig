@@ -4,7 +4,6 @@ root = true
 # Файлы C#
 [*.cs]
 
-[*.cs]
 dotnet_diagnostic.SA0001.severity = none
 
 #### Основные параметры EditorConfig ####
