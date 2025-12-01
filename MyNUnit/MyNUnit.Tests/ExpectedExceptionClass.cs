@@ -1,29 +1,10 @@
 ﻿namespace MyNUnit.Tests;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using MyTestAttribute = Attributes.TestAttribute;
-using MyBeforeAttribute = Attributes.BeforeAttribute;
-using MyAfterAttribute = Attributes.AfterAttribute;
-using MyBeforeClassAttribute = Attributes.BeforeClassAttribute;
-using MyAfterClassAttribute = Attributes.AfterClassAttribute;
-
-public class TestsForTest
-{
-    [MyTest]
-    public void PassingTest()
-    {
-    }
-
-    [MyTest]
-    public void FailingTest()
-    {
-        throw new Exception("aaa");
-    }
-
-    [MyTest(Ignore = "qqq")]
-    public void IgnoredTest()
-    {
-    }
-}
 
 public class ExceptionTest
 {
