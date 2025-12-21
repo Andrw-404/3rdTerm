@@ -18,38 +18,38 @@ public class TestsSequentialMultiply
     [SetUp]
     public void Setup()
     {
-        this.testMatrixA2x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixA2x2 = new Matrix(new int[,]
         {
         { 1, 2 },
         { 3, 4 },
         });
 
-        this.testMatrixB2x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixB2x2 = new Matrix(new int[,]
         {
         { 9, 8 },
         { 7, 6 },
         });
 
-        this.testMatrixA2x3 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixA2x3 = new Matrix(new int[,]
         {
         { 2, -3, 1 },
         { 5, 4, -2 },
         });
 
-        this.testMatrixB3x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixB3x2 = new Matrix(new int[,]
         {
         { -7, 5 },
         { 2, -1 },
         { 4, 3 },
         });
 
-        this.firstExpectedResult = Matrix.FillInFromArray(new int[,]
+        this.firstExpectedResult = new Matrix(new int[,]
         {
         { 23, 20 },
         { 55, 48 },
         });
 
-        this.secondExpectedResult = Matrix.FillInFromArray(new int[,]
+        this.secondExpectedResult = new Matrix(new int[,]
         {
         { -16, 16 },
         { -35, 15 },

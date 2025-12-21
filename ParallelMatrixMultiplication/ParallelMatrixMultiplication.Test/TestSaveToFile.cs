@@ -12,19 +12,12 @@ public class TestSaveToFile
     [SetUp]
     public void Setup()
     {
-        this.matrixToSave = new Matrix(3, 4);
-        this.matrixToSave[0, 0] = 99;
-        this.matrixToSave[0, 1] = 90;
-        this.matrixToSave[0, 2] = 88;
-        this.matrixToSave[0, 3] = 80;
-        this.matrixToSave[1, 0] = 77;
-        this.matrixToSave[1, 1] = 70;
-        this.matrixToSave[1, 2] = 66;
-        this.matrixToSave[1, 3] = 60;
-        this.matrixToSave[2, 0] = 55;
-        this.matrixToSave[2, 1] = 50;
-        this.matrixToSave[2, 2] = 44;
-        this.matrixToSave[2, 3] = 40;
+        this.matrixToSave = new Matrix(new int[,]
+        {
+            { 99, 90, 88, 80 },
+            { 77, 70, 66, 60 },
+            { 55, 50, 44, 40 },
+        });
 
         this.currentFilePath = "Test_STF.txt";
     }

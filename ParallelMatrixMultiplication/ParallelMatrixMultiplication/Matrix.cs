@@ -7,27 +7,45 @@ namespace ParallelMatrixMultiplication;
 /// <summary>
 /// A class representing a matrix and operations for working with it.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="Matrix"/> class.
-/// </remarks>
-/// <param name="rows">The number of specified rows.</param>
-/// <param name="columns">The number of specified columns.</param>
-public class Matrix(int rows, int columns)
+public class Matrix
 {
     /// <summary>
     /// An array for storing matrix elements.
     /// </summary>
-    private readonly int[,] numbers = new int[rows, columns];
+    private readonly int[,] numbers;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Matrix"/> class.
+    /// </summary>
+    /// <param name="rows">The number of specified rows.</param>
+    /// <param name="columns">The number of specified columns.</param>
+    public Matrix(int rows, int columns)
+    {
+        this.numbers = new int[rows, columns];
+        this.Rows = rows;
+        this.Columns = columns;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Matrix"/> class from a 2D array.
+    /// </summary>
+    /// <param name="data">The 2D array containing matrix values.</param>
+    public Matrix(int[,] data)
+    {
+        this.Rows = data.GetLength(0);
+        this.Columns = data.GetLength(1);
+        this.numbers = (int[,])data.Clone();
+    }
 
     /// <summary>
     /// Gets number of rows in the matrix.
     /// </summary>
-    public int Rows { get; private set; } = rows;
+    public int Rows { get; private set; }
 
     /// <summary>
     /// Gets number of columns in the matrix.
     /// </summary>
-    public int Columns { get; private set; } = columns;
+    public int Columns { get; private set; }
 
     /// <summary>
     /// Indexer for accessing matrix elements.
@@ -38,7 +56,6 @@ public class Matrix(int rows, int columns)
     public int this[int rows, int columns]
     {
         get => this.numbers[rows, columns];
-        set => this.numbers[rows, columns] = value;
     }
 
     /// <summary>
@@ -50,16 +67,16 @@ public class Matrix(int rows, int columns)
     public static Matrix GenerateRandomMatrix(int rows, int columns)
     {
         Random random = new Random();
-        Matrix matrix = new Matrix(rows, columns);
+        int[,] data = new int[rows, columns];
         for (int i = 0; i < rows; i++)
         {
             for (int j = 0; j < columns; ++j)
             {
-                matrix[i, j] = random.Next(1, 74);
+                data[i, j] = random.Next(1, 74);
             }
         }
 
-        return matrix;
+        return new Matrix(data);
     }
 
     /// <summary>
@@ -89,8 +106,7 @@ public class Matrix(int rows, int columns)
         string[] firstRowValues = lines[0].Split(' ', StringSplitOptions.RemoveEmptyEntries);
         int columnsSize = firstRowValues.Length;
 
-        Matrix matrix = new Matrix(rows, columnsSize);
-
+        int[,] data = new int[rows, columnsSize];
         for (int i = 0; i < rows; ++i)
         {
             string[] values = lines[i].Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -107,33 +123,11 @@ public class Matrix(int rows, int columns)
                     throw new FormatException("Неверный формат числа в строке");
                 }
 
-                matrix[i, j] = parsedValue;
+                data[i, j] = parsedValue;
             }
         }
 
-        return matrix;
-    }
-
-    /// <summary>
-    /// Method for creating a matrix form array of values.
-    /// </summary>
-    /// <param name="data">Array.</param>
-    /// <returns>Matrix with values from array.</returns>
-    public static Matrix FillInFromArray(int[,] data)
-    {
-        int rows = data.GetLength(0);
-        int columns = data.GetLength(1);
-        Matrix matrix = new Matrix(rows, columns);
-
-        for (int i = 0; i < rows;  ++i)
-        {
-            for (int j = 0; j < columns; ++j)
-            {
-                matrix[i, j] = data[i, j];
-            }
-        }
-
-        return matrix;
+        return new Matrix(data);
     }
 
     /// <summary>

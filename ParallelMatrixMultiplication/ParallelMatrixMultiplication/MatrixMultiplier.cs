@@ -7,7 +7,7 @@ namespace ParallelMatrixMultiplication;
 /// <summary>
 /// A class for performing matrix multiplication in sequential and parallel ways.
 /// </summary>
-public class MatrixMultiplier
+public static class MatrixMultiplier
 {
     /// <summary>
     /// Performs sequential multiplication of two matrices(AxB).
@@ -25,7 +25,7 @@ public class MatrixMultiplier
             throw new InvalidDataException("Умножение невозможно(количество столбцов первой матрицы не равно количеству строк второй)");
         }
 
-        Matrix result = new Matrix(a.Rows, b.Columns);
+        int[,] resultData = new int[a.Rows, b.Columns];
         for (int i = 0; i < a.Rows; ++i)
         {
             for (int j = 0; j < b.Columns; j++)
@@ -36,11 +36,11 @@ public class MatrixMultiplier
                     sum += a[i, k] * b[k, j];
                 }
 
-                result[i, j] = sum;
+                resultData[i, j] = sum;
             }
         }
 
-        return result;
+        return new Matrix(resultData);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public class MatrixMultiplier
             throw new InvalidDataException("Умножение невозможно(количество столбцов первой матрицы не равно количеству строк второй)");
         }
 
-        Matrix result = new Matrix(a.Rows, b.Columns);
+        int[,] resultData = new int[a.Rows, b.Columns];
 
         int actualNumOfThread = Math.Min(a.Rows, numThreads);
         Thread[] threads = new Thread[actualNumOfThread];
@@ -83,7 +83,7 @@ public class MatrixMultiplier
                             sum += a[row, k] * b[k, columns];
                         }
 
-                        result[row, columns] = sum;
+                        resultData[row, columns] = sum;
                     }
                 }
             });
@@ -99,6 +99,6 @@ public class MatrixMultiplier
             thread.Join();
         }
 
-        return result;
+        return new Matrix(resultData);
     }
 }

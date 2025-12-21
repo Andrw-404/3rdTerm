@@ -18,38 +18,38 @@ public class TestsParallelMultiply
     [SetUp]
     public void Setup()
     {
-        this.testMatrixA2x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixA2x2 = new Matrix(new int[,]
         {
         { 9, 4 },
         { 5, 1 },
         });
 
-        this.testMatrixB2x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixB2x2 = new Matrix(new int[,]
         {
         { 5, 3 },
         { 8, 7 },
         });
 
-        this.testMatrixA2x3 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixA2x3 = new Matrix(new int[,]
         {
         { 2, 1, 0 },
         { 7, -5, 6 },
         });
 
-        this.testMatrixB3x2 = Matrix.FillInFromArray(new int[,]
+        this.testMatrixB3x2 = new Matrix(new int[,]
         {
         { -2, 6 },
         { 4, 2 },
         { 3, 8 },
         });
 
-        this.firstExpectedResult = Matrix.FillInFromArray(new int[,]
+        this.firstExpectedResult = new Matrix(new int[,]
         {
         { 77, 55 },
         { 33, 22 },
         });
 
-        this.secondExpectedResult = Matrix.FillInFromArray(new int[,]
+        this.secondExpectedResult = new Matrix(new int[,]
         {
         { 0, 14 },
         { -16, 80 },
