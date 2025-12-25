@@ -46,6 +46,6 @@ public class MultithreadedVersion<T> : ILazy<T>
             }
         }
 
-        return this.result!;
+        return this.result;
     }
 }
