@@ -2,48 +2,46 @@
 // Copyright (c) Kalinin Andrew. All rights reserved.
 // </copyright>
 
-namespace LazyInterface
+namespace LazyInterface;
+
+/// <summary>
+/// Single-threaded implementation of lazy evaluation.
+/// </summary>
+/// <typeparam name="T">Type of calculated value.</typeparam>
+public class SimpleVersion<T> : ILazy<T>
 {
+    private Func<T>? supplier;
+
+    private T? result;
+
+    private bool isCalculated;
+
     /// <summary>
-    /// Single-threaded implementation of lazy evaluation.
+    /// Initializes a new instance of the <see cref="SimpleVersion{T}"/> class.
     /// </summary>
-    /// <typeparam name="T">Type of calculated value.</typeparam>
-    public class SimpleVersion<T> : ILazy<T>
+    /// <param name="supplier">A function that calculates the value.</param>
+    /// <exception cref="ArgumentNullException">If supplier is null.</exception>
+    public SimpleVersion(Func<T> supplier)
     {
-        private Func<T>? supplier;
+        ArgumentNullException.ThrowIfNull(supplier);
 
-        private T? result;
+        this.supplier = supplier;
+    }
 
-        private bool flag;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SimpleVersion{T}"/> class.
-        /// </summary>
-        /// <param name="supplier">A function that calculates the value.</param>
-        /// <exception cref="ArgumentNullException">If supplier is null.</exception>
-        public SimpleVersion(Func<T> supplier)
+    /// <summary>
+    /// Returns the calculated value. Performs the calculation on the first call,
+    /// returns the previously calculated value on subsequent attempts.
+    /// </summary>
+    /// <returns>Calculated value.</returns>
+    public T? Get()
+    {
+        if (!this.isCalculated)
         {
-            ArgumentNullException.ThrowIfNull(supplier);
-
-            this.supplier = supplier;
-            this.flag = false;
+            this.result = this.supplier!();
+            this.isCalculated = true;
+            this.supplier = null;
         }
 
-        /// <summary>
-        /// Returns the calculated value. Performs the calculation on the first call,
-        /// returns the previously calculated value on subsequent attempts.
-        /// </summary>
-        /// <returns>Calculated value.</returns>
-        public T Get()
-        {
-            if (!this.flag)
-            {
-                this.result = this.supplier!();
-                this.flag = true;
-                this.supplier = null;
-            }
-
-            return this.result;
-        }
+        return this.result;
     }
 }
