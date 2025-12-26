@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="../Attributes/Attributes.csproj" />
+  <Project Path="../MyNUnit.Tests/MyNUnit.Tests.csproj" />
+  <Project Path="../MyNUnit/MyNUnit.csproj" />
   <Project Path="MyNUnitWebTask.csproj" />
 </Solution>

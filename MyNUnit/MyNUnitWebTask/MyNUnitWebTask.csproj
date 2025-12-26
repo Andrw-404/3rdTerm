@@ -4,6 +4,11 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+  </PropertyGroup>  <ItemGroup>
+    <ProjectReference Include="..\Attributes\Attributes.csproj" />
+    <ProjectReference Include="..\MyNUnit.Tests\MyNUnit.Tests.csproj" />
+    <ProjectReference Include="..\MyNUnit\MyNUnit.csproj" />
+  </ItemGroup>
+
 
 </Project>
