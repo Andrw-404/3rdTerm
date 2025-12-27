@@ -1,20 +1,97 @@
+namespace MyNUnitWebTask.Pages;
+
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace MyNUnitWebTask.Pages
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
+    private readonly ILogger<IndexModel> _logger;
+    private readonly TestRunService _testRunService;
+
+    public List<string> UploadedFiles { get; set; } = new();
+    public TestRunInfo? LastRun { get; set; }
+    public List<TestRunInfo> History { get; set; } = new();
+    public IndexModel(ILogger<IndexModel> logger)
     {
-        private readonly ILogger<IndexModel> _logger;
+        _logger = logger;
+        _testRunService = new TestRunService();
+    }
 
-        public IndexModel(ILogger<IndexModel> logger)
+    public void OnGet()
+    {
+        LoadUploadedFiles();
+        LastRun = _testRunService.GetLastRun();
+        History = _testRunService.GetHistory();
+    }
+
+    private void LoadUploadedFiles()
+    {
+        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (Directory.Exists(uploadDir))
         {
-            _logger = logger;
+            UploadedFiles = Directory.GetFiles(uploadDir).Select(Path.GetFileName).Where(f => !string.IsNullOrEmpty(f)).ToList();
+        }
+    }
+
+    public async Task<IActionResult> OnPostAsync(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            ModelState.AddModelError(string.Empty, "Выберите файл");
+            LoadUploadedFiles();
+            return Page();
         }
 
-        public void OnGet()
+        if (!file.FileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
         {
-
+            ModelState.AddModelError(string.Empty, "Требуется .dll файл");
+            LoadUploadedFiles();
+            return Page();
         }
+
+        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        Directory.CreateDirectory(uploadDir);
+
+        var filePath = Path.Combine(uploadDir, file.FileName);
+        using (var stream = new System.IO.FileStream(filePath, System.IO.FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        LoadUploadedFiles();
+        return Page();
+    }
+
+    public IActionResult OnPostRunTests()
+    {
+        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        var files = Directory.GetFiles(uploadDir, "*.dll");
+
+        var result = _testRunService.RunTests(files.ToList());
+        var history = _testRunService.GetHistory();
+
+        return new JsonResult(new
+        {
+            success = true,
+            lastRun = result,
+            history = history
+        });
+    }
+        
+    public IActionResult OnPostDeleteFile(string fileName)
+    {
+        if (!string.IsNullOrEmpty(fileName))
+        {
+            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            var filePath = Path.Combine(uploadDir, fileName);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+        }
+
+        return RedirectToPage();
     }
 }

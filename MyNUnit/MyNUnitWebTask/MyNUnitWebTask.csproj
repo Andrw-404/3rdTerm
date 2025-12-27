@@ -8,9 +8,7 @@
     <ProjectReference Include="..\Attributes\Attributes.csproj" />
     <ProjectReference Include="..\MyNUnit.Tests\MyNUnit.Tests.csproj" />
     <ProjectReference Include="..\MyNUnit\MyNUnit.csproj" />
-  </ItemGroup>  <ItemGroup>
-  <Folder Include="wwwroot\images\" />
-</ItemGroup>
+  </ItemGroup>
 
 
 </Project>
