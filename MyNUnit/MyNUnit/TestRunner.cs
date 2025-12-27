@@ -29,11 +29,12 @@ public class TestRunner
             try
             {
                 var assembly = Assembly.LoadFrom(dllPath);
+                var assemblyName = Path.GetFileName(dllPath);
                 var testClasses = assembly.GetTypes().Where(x => x.GetMethods().Any(y => y.GetCustomAttribute<TestAttribute>() != null));
 
                 Parallel.ForEach(testClasses, (testClass) =>
                 {
-                    this.RunTestsInClass(testClass, results);
+                    this.RunTestsInClass(testClass, results, assemblyName);
                 });
             }
             catch (Exception exception)
@@ -67,11 +68,12 @@ public class TestRunner
         return true;
     }
 
-    private void RunSingleTest(Type testClass, MethodInfo methodInfo, ConcurrentBag<TestResult> results)
+    private void RunSingleTest(Type testClass, MethodInfo methodInfo, ConcurrentBag<TestResult> results, string assemblyName)
     {
         var attribute = methodInfo.GetCustomAttribute<TestAttribute>()!;
         var result = new TestResult
         {
+            AssemblyName = assemblyName,
             ClassName = testClass.Name,
             MethodName = methodInfo.Name,
         };
@@ -152,11 +154,11 @@ public class TestRunner
         }
     }
 
-    private void RunTestsInClass(Type testClass, ConcurrentBag<TestResult> results)
+    private void RunTestsInClass(Type testClass, ConcurrentBag<TestResult> results, string assemblyName)
     {
         if (!this.RunStaticMethods(testClass, typeof(BeforeClassAttribute), out string? beforeClassError))
         {
-            this.FailAllTests(testClass, results, $"{beforeClassError}");
+            this.FailAllTests(testClass, results, $"{beforeClassError}", assemblyName);
             return;
         }
 
@@ -164,19 +166,20 @@ public class TestRunner
 
         foreach (var testMethod in testMethods)
         {
-            this.RunSingleTest(testClass, testMethod, results);
+            this.RunSingleTest(testClass, testMethod, results, assemblyName);
         }
 
         this.RunStaticMethods(testClass, typeof(AfterClassAttribute), out _);
     }
 
-    private void FailAllTests(Type testClass, ConcurrentBag<TestResult> results, string reason)
+    private void FailAllTests(Type testClass, ConcurrentBag<TestResult> results, string reason, string assemblyName)
     {
         var methods = testClass.GetMethods().Where(x => x.GetCustomAttribute<TestAttribute>() != null);
         foreach (var method in methods)
         {
             results.Add(new TestResult
             {
+                AssemblyName = assemblyName,
                 ClassName = testClass.Name,
                 MethodName = method.Name,
                 IsSuccess = false,
