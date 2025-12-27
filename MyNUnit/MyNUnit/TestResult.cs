@@ -10,6 +10,11 @@ namespace MyNUnit;
 public class TestResult
 {
     /// <summary>
+    /// Gets or sets the name of the assembly containing the test.
+    /// </summary>
+    public string? AssemblyName { get; set; }
+
+    /// <summary>
     /// Gets or sets the name of the test class containing the test method.
     /// </summary>
     public string? ClassName { get; set; }
