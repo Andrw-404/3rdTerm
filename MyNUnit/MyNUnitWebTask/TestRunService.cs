@@ -31,13 +31,7 @@ public class TestRunService
                 RunId = nextRunId++,
                 RunTime = DateTime.Now,
                 LoadedAssemblies = assemblyPaths.Select(Path.GetFileName).ToList() ?? new(),
-                Tests = testResult.Select(x => new TestInfo
-                {
-                    TestName = $"{x.ClassName}.{x.MethodName}",
-                    Status = x.IsIgnored ? "Ignored" : (x.IsSuccess ? "Passed" : "Failed"),
-                    ExecutionTime = (long)x.TestTime.TotalMilliseconds,
-                    Message = x.IsIgnored ? x.IgnoreReason ?? "" : x.ErrorMessage ?? ""
-                }).ToList()
+                Tests = testResult.ToList()
             };
 
             allRuns.Add(runInfo);
