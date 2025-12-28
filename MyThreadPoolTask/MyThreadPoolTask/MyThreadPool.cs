@@ -147,7 +147,7 @@ public class MyThreadPool
         private readonly MyThreadPool pool;
         private readonly object taskLock = new();
         private readonly ManualResetEventSlim resultReady = new(false);
-        private readonly List<Action> followUpActions = new();
+        private readonly List<(Action Execute, Action OnShutDown)> followUpActions = new();
 
         private Func<TResult>? func;
         private TResult? result;
@@ -211,10 +211,25 @@ public class MyThreadPool
                 }
                 else
                 {
-                    this.followUpActions.Add(nextTask.Execute);
+                    this.followUpActions.Add((nextTask.Execute, nextTask.SetShutdownException));
                 }
 
                 return nextTask;
+            }
+        }
+
+        internal void SetShutdownException()
+        {
+            lock (this.taskLock)
+            {
+                if (this.isCompleted)
+                {
+                    return;
+                }
+
+                this.exception = new AggregateException(new InvalidOperationException("Пул остановлен"));
+                this.isCompleted = true;
+                this.resultReady.Set();
             }
         }
 
@@ -240,14 +255,15 @@ public class MyThreadPool
 
                     this.resultReady.Set();
 
-                    foreach (var action in this.followUpActions)
+                    foreach (var (execute, onShutdown) in this.followUpActions)
                     {
                         try
                         {
-                            this.pool.EnqueueAction(action);
+                            this.pool.EnqueueAction(execute);
                         }
                         catch (InvalidOperationException)
                         {
+                            onShutdown();
                         }
                     }
 
