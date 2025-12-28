@@ -1,10 +1,176 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "MyNUnit";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: white;
+        font-weight: bold;
+        margin: 0 3px;
+    }
+
+    .circle-green {
+        background: green;
+    }
+
+    .circle-red {
+        background: red;
+    }
+
+    .circle-yellow {
+        background: orange;
+    }
+
+    .file-badge {
+        display: inline-block;
+        background: grey;
+        padding: 4px 8px;
+        border-radius: 4px;
+        margin: 3px;
+    }
+</style>
+
+<h1>MyNUnit Web Tester</h1>
+
+<div class="card mb-3">
+    <div class="card-header">Загрузка сборок</div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <label>Выберите .dll файл</label>
+            <div class="d-flex gap-2 mt-2">
+                <input type="file" name="file" accept=".dll" class="form-control" style="max-width:400px;" required />
+                <button type="submit" class="btn btn-primary">Загрузить</button>
+            </div>
+        </form>
+        @if (Model.UploadedFiles?.Any() == true)
+        {
+            <div class="mt-3">
+                <strong>Загруженные:</strong>
+                @foreach (var f in Model.UploadedFiles)
+                {
+                    <span class="file-badge">
+                        @f
+                        <form method="post" asp-page-handler="DeleteFile" style="display:inline;">
+                            <input type="hidden" name="fileName" value="@f" />
+                            <button type="submit" class="btn-close" style="font-size:0.5rem;"></button>
+                        </form>
+                    </span>
+                }
+            </div>
+            <button id="runBtn" class="btn btn-success mt-3">Запустить тесты</button>
+        }
+    </div>
 </div>
+
+<div class="card mb-3">
+    <div class="card-header">Результаты последнего запуска</div>
+    <div class="card-body" id="lastRun">
+        @if (Model.LastRun != null)
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Сборка</th>
+                        <th>Метод</th>
+                        <th>Сообщение</th>
+                        <th>Время (мс)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in Model.LastRun.Tests)
+                    {
+                        var cls = t.IsIgnored ? "table-warning" : (t.IsSuccess ? "table-success" : "table-danger");
+                        var msg = t.IsIgnored ? t.IgnoreReason : t.ErrorMessage;
+                        <tr class="@cls">
+                            <td>@t.AssemblyName</td>
+                            <td>@t.ClassName.@t.MethodName</td>
+                            <td>@(string.IsNullOrEmpty(msg) ? "—" : msg)</td>
+                            <td>@t.TestTime.TotalMilliseconds.ToString("F4")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="text-muted mb-0">Нет результатов. Загрузите файлы и запустите тесты.</p>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">История запусков</div>
+    <div class="card-body" id="history">
+        @if (Model.History.Any())
+        {
+            foreach (var run in Model.History)
+            {
+                <div style="margin-bottom:8px;">
+                    <strong>Прогон #@run.RunId:</strong>
+                    <span class="circle circle-green">@run.PassedCount</span>
+                    <span class="circle circle-yellow">@run.IgnoredCount</span>
+                    <span class="circle circle-red">@run.FailedCount</span>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-muted mb-0">История пуста.</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('runBtn')?.addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+
+            fetch('@Url.Page("Index", "RunTests")', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    var h = `<table class="table table-bordered">
+                    <thead>
+                            <tr>
+                                <th>Сборка</th>
+                                <th>Метод</th>
+                                <th>Сообщение</th>
+                                <th>Время (мс)</th>
+                            </tr>
+                                </thead>
+                                <tbody>`;
+                    d.lastRun.tests.forEach(t => {
+                        var cls = t.isIgnored ? 'table-warning' : (t.isSuccess ? 'table-success' : 'table-danger');
+                        var msg = t.isIgnored ? t.ignoreReason : (t.errorMessage || '—');
+                        h += '<tr class="' + cls + '"><td>' + t.assemblyName + '</td><td>' + t.className + '.' + t.methodName + '</td><td>' + msg + '</td><td>' + t.testTime.toFixed(4) + '</td></tr>';
+                    });
+                    h += '</tbody></table>';
+                    document.getElementById('lastRun').innerHTML = h;
+
+                    var hist = '';
+                    d.history.forEach(r => {
+                        hist += '<div style="margin-bottom:8px;"><strong>Прогон #' + r.runId + ':</strong> ';
+                        hist += '<span class="circle circle-green">' + r.passedCount + '</span>';
+                        hist += '<span class="circle circle-yellow">' + r.ignoredCount + '</span>';
+                        hist += '<span class="circle circle-red">' + r.failedCount + '</span></div>';
+                    });
+                    document.getElementById('history').innerHTML = hist || '<p class="text-muted mb-0">История пуста.</p>';
+                }
+            })
+            .catch(e => alert('Ошибка: ' + e))
+            .finally(() => { btn.disabled = false; });
+        });
+    </script>
+}
