@@ -10,3 +10,9 @@
 ### [Задание 2: Lazy](https://github.com/Andrw-404/3rdTerm/pull/2)
 
 ### [Задание 3: MyThreadPool](https://github.com/Andrw-404/3rdTerm/pull/3)
+
+### [Задание 4: SimpleFTP](https://github.com/Andrw-404/3rdTerm/pull/4)
+
+### [Задание 5: MyNUnit](https://github.com/Andrw-404/3rdTerm/pull/6)
+
+### [Задание 6: MyNUnitWeb](https://github.com/Andrw-404/3rdTerm/pull/9)
