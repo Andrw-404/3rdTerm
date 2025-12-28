@@ -74,8 +74,31 @@ public class IndexModel : PageModel
         return new JsonResult(new
         {
             success = true,
-            lastRun = result,
-            history = history
+            lastRun = new
+            {
+                runId = result.RunId,
+                passedCount = result.PassedCount,
+                failedCount = result.FailedCount,
+                ignoredCount = result.IgnoredCount,
+                tests = result.Tests.Select(t => new
+                {
+                    assemblyName = t.AssemblyName,
+                    className = t.ClassName,
+                    methodName = t.MethodName,
+                    isSuccess = t.IsSuccess,
+                    isIgnored = t.IsIgnored,
+                    ignoreReason = t.IgnoreReason,
+                    errorMessage = t.ErrorMessage,
+                    testTime = t.TestTime.TotalMilliseconds
+                })
+            },
+            history = history.Select(h => new
+            {
+                runId = h.RunId,
+                passedCount = h.PassedCount,
+                failedCount = h.FailedCount,
+                ignoredCount = h.IgnoredCount
+            })
         });
     }
         

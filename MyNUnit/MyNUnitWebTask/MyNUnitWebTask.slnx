@@ -2,5 +2,6 @@
   <Project Path="../Attributes/Attributes.csproj" />
   <Project Path="../MyNUnit.Tests/MyNUnit.Tests.csproj" />
   <Project Path="../MyNUnit/MyNUnit.csproj" />
+  <Project Path="../MyNUnitWeb.Tests/MyNUnitWeb.Tests.csproj" Id="1a31f36f-acdd-4c74-ab32-49446b947901" />
   <Project Path="MyNUnitWebTask.csproj" />
 </Solution>
