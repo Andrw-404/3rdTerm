@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Attributes/Attributes.csproj" />
+  <Project Path="MyNUnit.Tests/MyNUnit.Tests.csproj" Id="02fbf7ba-ad5e-4ec3-8031-420bd98da021" />
+  <Project Path="MyNUnit/MyNUnit.csproj" />
+</Solution>
