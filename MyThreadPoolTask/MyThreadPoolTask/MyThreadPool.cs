@@ -104,7 +104,7 @@ public class MyThreadPool
         {
             if (this.isShutdown)
             {
-                throw new InvalidOperationException("Пул останолен");
+                throw new InvalidOperationException("Пул остановлен");
             }
 
             this.taskQueue.Enqueue(action);
@@ -183,16 +183,11 @@ public class MyThreadPool
         {
             ArgumentNullException.ThrowIfNull(next);
 
-            if (this.pool.cancellationTokenSource.IsCancellationRequested)
-            {
-                throw new InvalidOperationException();
-            }
-
             lock (this.taskLock)
             {
-                if (this.pool.cancellationTokenSource.IsCancellationRequested && this.pool.isShutdown)
+                if (this.pool.isShutdown)
                 {
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException("Пул остановлен");
                 }
 
                 var nextTask = new MyTask<TNewResult>(
