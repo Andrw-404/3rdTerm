@@ -1,6 +1,6 @@
-﻿using MyNUnit;
+﻿namespace MyNUnitWebTask;
 
-namespace MyNUnitWebTask;
+using MyNUnit;
 
 public class TestRunService
 {

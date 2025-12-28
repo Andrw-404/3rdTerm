@@ -4,7 +4,14 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>  <ItemGroup>
+  </PropertyGroup>  
+
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup><ItemGroup>
     <ProjectReference Include="..\Attributes\Attributes.csproj" />
     <ProjectReference Include="..\MyNUnit.Tests\MyNUnit.Tests.csproj" />
     <ProjectReference Include="..\MyNUnit\MyNUnit.csproj" />

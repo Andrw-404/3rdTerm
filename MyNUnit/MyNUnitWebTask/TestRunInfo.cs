@@ -1,6 +1,7 @@
-﻿using MyNUnit;
+﻿namespace MyNUnitWebTask;
 
-namespace MyNUnitWebTask;
+using MyNUnit;
+
 public class TestRunInfo
 {
     public int RunId {  get; set; }
