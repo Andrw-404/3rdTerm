@@ -14,10 +14,25 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
+		<AdditionalFiles Include="stylecop.json" />
+	</ItemGroup>
+
+
+	<ItemGroup>
     <ProjectReference Include="..\Attributes\Attributes.csproj" />
     <ProjectReference Include="..\MyNUnitWebTask\MyNUnitWebTask.csproj" />
     <ProjectReference Include="..\MyNUnit\MyNUnit.csproj" />
   </ItemGroup>
+
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="D:\3rdTerm\MyNUnit\MyNUnitWebTask.Tests\.editorconfig" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <None Include="D:\3rdTerm\MyNUnit\MyNUnitWebTask.Tests\.editorconfig" />
+	</ItemGroup>
 
 </Project>

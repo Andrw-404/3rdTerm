@@ -1,53 +1,75 @@
+// <copyright file="Index.cshtml.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
 namespace MyNUnitWebTask.Pages;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
+/// <summary>
+/// Page model for the Index page that handles file uploads and test execution.
+/// </summary>
 public class IndexModel : PageModel
 {
-    private readonly ILogger<IndexModel> _logger;
-    private readonly TestRunService _testRunService;
+    private readonly ILogger<IndexModel> logger;
+    private readonly TestRunService testRunService;
 
-    public List<string> UploadedFiles { get; set; } = new();
-    public TestRunInfo? LastRun { get; set; }
-    public List<TestRunInfo> History { get; set; } = new();
+    /// <summary>
+    /// Initializes a new instance of the <see cref="IndexModel"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance for logging.</param>
     public IndexModel(ILogger<IndexModel> logger)
     {
-        _logger = logger;
-        _testRunService = new TestRunService();
+        this.logger = logger;
+        this.testRunService = new TestRunService();
     }
 
+    /// <summary>
+    /// Gets or sets the list of uploaded DLL file names.
+    /// </summary>
+    public List<string> UploadedFiles { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the information about the last test run.
+    /// </summary>
+    public TestRunInfo? LastRun { get; set; }
+
+    /// <summary>
+    /// Gets or sets the history of all test runs.
+    /// </summary>
+    public List<TestRunInfo> History { get; set; } = new();
+
+    /// <summary>
+    /// Handles GET requests to the Index page. Loads uploaded files and test run history.
+    /// </summary>
     public void OnGet()
     {
-        LoadUploadedFiles();
-        LastRun = _testRunService.GetLastRun();
-        History = _testRunService.GetHistory();
+        this.LoadUploadedFiles();
+        this.LastRun = this.testRunService.GetLastRun();
+        this.History = this.testRunService.GetHistory();
     }
 
-    private void LoadUploadedFiles()
-    {
-        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        if (Directory.Exists(uploadDir))
-        {
-            UploadedFiles = Directory.GetFiles(uploadDir).Select(Path.GetFileName).Where(f => !string.IsNullOrEmpty(f)).ToList();
-        }
-    }
-
+    /// <summary>
+    /// Handles POST requests for file upload. Validates and saves the uploaded DLL file.
+    /// </summary>
+    /// <param name="file">The uploaded file.</param>
+    /// <returns>The page result after processing the upload.</returns>
     public async Task<IActionResult> OnPostAsync(IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
-            ModelState.AddModelError(string.Empty, "Выберите файл");
-            LoadUploadedFiles();
-            return Page();
+            this.ModelState.AddModelError(string.Empty, "Выберите файл");
+            this.LoadUploadedFiles();
+            return this.Page();
         }
 
         if (!file.FileName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError(string.Empty, "Требуется .dll файл");
-            LoadUploadedFiles();
-            return Page();
+            this.ModelState.AddModelError(string.Empty, "Требуется .dll файл");
+            this.LoadUploadedFiles();
+            return this.Page();
         }
 
         var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
@@ -59,17 +81,21 @@ public class IndexModel : PageModel
             await file.CopyToAsync(stream);
         }
 
-        LoadUploadedFiles();
-        return Page();
+        this.LoadUploadedFiles();
+        return this.Page();
     }
 
+    /// <summary>
+    /// Handles POST requests to run tests on all uploaded DLL files.
+    /// </summary>
+    /// <returns>A JSON result containing test run results and history.</returns>
     public IActionResult OnPostRunTests()
     {
         var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         var files = Directory.GetFiles(uploadDir, "*.dll");
 
-        var result = _testRunService.RunTests(files.ToList());
-        var history = _testRunService.GetHistory();
+        var result = this.testRunService.RunTests(files.ToList());
+        var history = this.testRunService.GetHistory();
 
         return new JsonResult(new
         {
@@ -89,19 +115,24 @@ public class IndexModel : PageModel
                     isIgnored = t.IsIgnored,
                     ignoreReason = t.IgnoreReason,
                     errorMessage = t.ErrorMessage,
-                    testTime = t.TestTime.TotalMilliseconds
-                })
+                    testTime = t.TestTime.TotalMilliseconds,
+                }),
             },
             history = history.Select(h => new
             {
                 runId = h.RunId,
                 passedCount = h.PassedCount,
                 failedCount = h.FailedCount,
-                ignoredCount = h.IgnoredCount
-            })
+                ignoredCount = h.IgnoredCount,
+            }),
         });
     }
-        
+
+    /// <summary>
+    /// Handles POST requests to delete an uploaded file.
+    /// </summary>
+    /// <param name="fileName">The name of the file to delete.</param>
+    /// <returns>A redirect to the Index page.</returns>
     public IActionResult OnPostDeleteFile(string fileName)
     {
         if (!string.IsNullOrEmpty(fileName))
@@ -115,6 +146,18 @@ public class IndexModel : PageModel
             }
         }
 
-        return RedirectToPage();
+        return this.RedirectToPage();
+    }
+
+    /// <summary>
+    /// Loads the list of uploaded DLL files from the uploads directory.
+    /// </summary>
+    private void LoadUploadedFiles()
+    {
+        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (Directory.Exists(uploadDir))
+        {
+            this.UploadedFiles = Directory.GetFiles(uploadDir).Select(Path.GetFileName).Where(f => !string.IsNullOrEmpty(f)).Cast<string>().ToList();
+        }
     }
 }

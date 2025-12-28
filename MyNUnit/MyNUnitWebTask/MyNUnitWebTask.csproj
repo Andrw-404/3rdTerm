@@ -17,5 +17,16 @@
     <ProjectReference Include="..\MyNUnit\MyNUnit.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="stylecop.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EditorConfigFiles Remove="D:\3rdTerm\MyNUnit\MyNUnitWebTask\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="D:\3rdTerm\MyNUnit\MyNUnitWebTask\.editorconfig" />
+	</ItemGroup>
 
 </Project>

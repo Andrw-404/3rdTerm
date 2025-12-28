@@ -1,22 +1,26 @@
-﻿namespace MyNUnitWebTask.Tests;
+﻿// <copyright file="TestRunServiceTests.cs" company="Kalinin Andrew">
+// Copyright (c) Kalinin Andrew. All rights reserved.
+// </copyright>
+
+namespace MyNUnitWebTask.Tests;
 
 using Attributes;
 using MyNUnit;
 
 public class TestRunServiceTests
 {
+    private string testDirectory;
     private TestRunService testRunService;
-    public string testDirectory;
 
     [Before]
     public void SetUp()
     {
-        testRunService = new TestRunService(); 
-        testDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        this.testRunService = new TestRunService();
+        this.testDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
-        if (Directory.Exists(testDirectory))
+        if (Directory.Exists(this.testDirectory))
         {
-            foreach (var file in Directory.GetFiles(testDirectory, "*.dll"))
+            foreach (var file in Directory.GetFiles(this.testDirectory, "*.dll"))
             {
                 File.Delete(file);
             }
@@ -26,7 +30,7 @@ public class TestRunServiceTests
     [Test]
     public void GetHistory_CalledWithoutHisttory_ShouldReturnEmptyList()
     {
-        var history = testRunService.GetHistory();
+        var history = this.testRunService.GetHistory();
 
         Assert.IsNotNull(history);
         Assert.AreEqual(0, history.Count);
@@ -36,7 +40,7 @@ public class TestRunServiceTests
     public void RunTests_EmptyList_ShouldReturnTestRunWithZeroTest()
     {
         var emptyList = new List<string>();
-        var result = testRunService.RunTests(emptyList);
+        var result = this.testRunService.RunTests(emptyList);
 
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.Tests);
@@ -47,18 +51,18 @@ public class TestRunServiceTests
     public void GetHistory_AfterRunTests_ContainsNewRun()
     {
         var emptyList = new List<string>();
-        testRunService.RunTests(emptyList);
-        var history = testRunService.GetHistory();
+        this.testRunService.RunTests(emptyList);
+        var history = this.testRunService.GetHistory();
         Assert.AreEqual(1, history.Count);
     }
 
     [Test]
     public void GetHistory_ShouldReturnsRunsInDescendingOrder()
     {
-        testRunService.RunTests(new List<string>());
-        testRunService.RunTests(new List<string>());
-        testRunService.RunTests(new List<string>());
-        var history = testRunService.GetHistory();
+        this.testRunService.RunTests(new List<string>());
+        this.testRunService.RunTests(new List<string>());
+        this.testRunService.RunTests(new List<string>());
+        var history = this.testRunService.GetHistory();
 
         Assert.AreEqual(3, history.Count);
         Assert.IsTrue(history[0].RunId > history[1].RunId);
@@ -68,11 +72,11 @@ public class TestRunServiceTests
     [Test]
     public void GetLastRun_AfterMultipleRuns_ReturnsLastOne()
     {
-        testRunService.RunTests(new List<string>());
-        testRunService.RunTests(new List<string>());
-        testRunService.RunTests(new List<string>());
-        var lastRun = testRunService.GetLastRun();
-        var history = testRunService.GetHistory();
+        this.testRunService.RunTests(new List<string>());
+        this.testRunService.RunTests(new List<string>());
+        this.testRunService.RunTests(new List<string>());
+        var lastRun = this.testRunService.GetLastRun();
+        var history = this.testRunService.GetHistory();
 
         Assert.IsNotNull(lastRun);
         Assert.AreEqual(history[0].RunId, lastRun.RunId);
