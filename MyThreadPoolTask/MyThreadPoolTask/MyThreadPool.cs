@@ -17,7 +17,7 @@ public class MyThreadPool
 
     private readonly CancellationTokenSource cancellationTokenSource = new();
 
-    private volatile bool isShutdown = false;
+    private int isShutdown = 0;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MyThreadPool"/> class.
@@ -27,10 +27,7 @@ public class MyThreadPool
     /// </exception>
     public MyThreadPool(int threadCount)
     {
-        if (threadCount <= 0)
-        {
-            throw new ArgumentOutOfRangeException($"Количество потоков {threadCount} должно быть больше нуля");
-        }
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(threadCount, 0);
 
         this.workers = new Thread[threadCount];
         for (int i = 0; i < threadCount; ++i)
@@ -55,12 +52,8 @@ public class MyThreadPool
     /// </exception>
     public IMyTask<TResult> Submit<TResult>(Func<TResult> func)
     {
-        if (this.isShutdown)
-        {
-            throw new InvalidOperationException("Пул остановлен");
-        }
 
-        ArgumentNullException.ThrowIfNull(func, nameof(func));
+        ArgumentNullException.ThrowIfNull(func);
 
         var task = new MyTask<TResult>(func, this);
         this.EnqueueAction(task.Execute);
@@ -72,12 +65,11 @@ public class MyThreadPool
     /// </summary>
     public void Shutdown()
     {
-        if (this.cancellationTokenSource.IsCancellationRequested)
+        if (Interlocked.CompareExchange(ref this.isShutdown, 1, 0) != 0)
         {
             return;
         }
 
-        this.isShutdown = true;
         this.cancellationTokenSource.Cancel();
         lock (this.queueLock)
         {
@@ -102,7 +94,7 @@ public class MyThreadPool
     {
         lock (this.queueLock)
         {
-            if (this.isShutdown)
+            if (this.isShutdown != 0)
             {
                 throw new InvalidOperationException("Пул остановлен");
             }
@@ -145,9 +137,9 @@ public class MyThreadPool
     private class MyTask<TResult> : IMyTask<TResult>
     {
         private readonly MyThreadPool pool;
-        private readonly object taskLock = new();
+        private readonly Lock taskLock = new();
         private readonly ManualResetEventSlim resultReady = new(false);
-        private readonly List<(Action Execute, Action OnShutDown)> followUpActions = new();
+        private readonly List<(Action Execute, Action OnShutDown, Action<AggregateException> OnParentException)> followUpActions = new();
 
         private Func<TResult>? func;
         private TResult? result;
@@ -185,10 +177,6 @@ public class MyThreadPool
 
             lock (this.taskLock)
             {
-                if (this.pool.isShutdown)
-                {
-                    throw new InvalidOperationException("Пул остановлен");
-                }
 
                 var nextTask = new MyTask<TNewResult>(
                     () =>
@@ -200,18 +188,18 @@ public class MyThreadPool
 
                 if (this.IsCompleted)
                 {
-                    try
+                    if (this.exception is not null)
+                    {
+                        nextTask.SetParentException(this.exception);
+                    }
+                    else
                     {
                         this.pool.EnqueueAction(nextTask.Execute);
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        throw new InvalidOperationException("Пул остановлен");
                     }
                 }
                 else
                 {
-                    this.followUpActions.Add((nextTask.Execute, nextTask.SetShutdownException));
+                    this.followUpActions.Add((nextTask.Execute, nextTask.SetShutdownException, nextTask.SetParentException));
                 }
 
                 return nextTask;
@@ -228,6 +216,21 @@ public class MyThreadPool
                 }
 
                 this.exception = new AggregateException(new InvalidOperationException("Пул остановлен"));
+                this.isCompleted = true;
+                this.resultReady.Set();
+            }
+        }
+
+        internal void SetParentException(AggregateException parentException)
+        {
+            lock (this.taskLock)
+            {
+                if (this.isCompleted)
+                {
+                    return;
+                }
+
+                this.exception = parentException;
                 this.isCompleted = true;
                 this.resultReady.Set();
             }
@@ -255,15 +258,22 @@ public class MyThreadPool
 
                     this.resultReady.Set();
 
-                    foreach (var (execute, onShutdown) in this.followUpActions)
+                    foreach (var (execute, onShutdown, onParentException) in this.followUpActions)
                     {
-                        try
+                        if (this.exception is not null)
                         {
-                            this.pool.EnqueueAction(execute);
+                            onParentException(this.exception);
                         }
-                        catch (InvalidOperationException)
+                        else
                         {
-                            onShutdown();
+                            try
+                            {
+                                this.pool.EnqueueAction(execute);
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                onShutdown();
+                            }
                         }
                     }
 

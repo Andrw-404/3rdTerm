@@ -17,7 +17,11 @@ public interface IMyTask<TResult>
 
     /// <summary>
     /// Gets the result of the task completion.
+    /// Blocks the calling thread until the task completes.
     /// </summary>
+    /// <exception cref="AggregateException">
+    /// Thrown if the task completed with an exception.
+    /// </exception>
     TResult Result { get; }
 
     /// <summary>
