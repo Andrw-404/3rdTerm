@@ -14,7 +14,7 @@ public class ThreadPoolTests
     public void TearDown() => this.threadPool?.Shutdown();
 
     [Test]
-    public void Submit_SinglTask_ReturnCorrectResult()
+    public void Submit_SingleTask_ReturnCorrectResult()
     {
         this.threadPool = new MyThreadPool(4);
         var task = this.threadPool.Submit(() => 42 * 2);
@@ -23,7 +23,7 @@ public class ThreadPoolTests
     }
 
     [Test]
-    public void Submit_MultiplyTask_ReturnCorrectResult()
+    public void Submit_MultipleTask_ReturnsCorrectResult()
     {
         this.threadPool = new MyThreadPool(5);
         var tasks = new List<IMyTask<int>>();
@@ -73,7 +73,7 @@ public class ThreadPoolTests
     }
 
     [Test]
-    public void ThreadPool_NumberOfThreads_ShouldUsetheSpecifiedAmount()
+    public void ThreadPool_NumberOfThreads_ShouldUseTheSpecifiedAmount()
     {
         const int threadCount = 5;
         this.threadPool = new MyThreadPool(threadCount);
