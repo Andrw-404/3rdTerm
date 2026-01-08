@@ -11,10 +11,7 @@ public class ThreadPoolTests
     private MyThreadPool? threadPool;
 
     [TearDown]
-    public void TearDown()
-    {
-        this.threadPool?.Shutdown();
-    }
+    public void TearDown() => this.threadPool?.Shutdown();
 
     [Test]
     public void Submit_SinglTask_ReturnCorrectResult()
@@ -201,5 +198,237 @@ public class ThreadPoolTests
         Assert.That(exception!.InnerException, Is.InstanceOf<InvalidOperationException>());
 
         this.threadPool = null;
+    }
+
+    [Test]
+    public void RaceCondition_SubmitAndShutdownConcurrently_ShouldHandleGracefully()
+    {
+        this.threadPool = new MyThreadPool(4);
+        var exceptions = new ConcurrentBag<Exception>();
+        var successfulTasks = new ConcurrentBag<IMyTask<int>>();
+        var shutdownStarted = new ManualResetEventSlim(false);
+        var submitThreadsReady = new CountdownEvent(10);
+
+        var submitThreads = new List<Thread>();
+        for (int i = 0; i < 10; ++i)
+        {
+            int taskId = i;
+            var thread = new Thread(() =>
+            {
+                submitThreadsReady.Signal();
+                shutdownStarted.Wait();
+                try
+                {
+                    var task = this.threadPool!.Submit(() => taskId);
+                    successfulTasks.Add(task);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    exceptions.Add(ex);
+                }
+            });
+            submitThreads.Add(thread);
+            thread.Start();
+        }
+
+        submitThreadsReady.Wait();
+        shutdownStarted.Set();
+
+        var shutdownThread = new Thread(() =>
+        {
+            Thread.Sleep(5);
+            this.threadPool!.Shutdown();
+        });
+        shutdownThread.Start();
+
+        foreach (var thread in submitThreads)
+        {
+            thread.Join();
+        }
+
+        shutdownThread.Join();
+
+        Assert.That(successfulTasks.Count + exceptions.Count, Is.EqualTo(10));
+
+        this.threadPool = null;
+    }
+
+    [Test]
+    public void RaceCondition_MultipleContinueWithDuringShutdown_ShouldHandleCorrectly()
+    {
+        this.threadPool = new MyThreadPool(2);
+        var blockSignal = new ManualResetEventSlim(false);
+        var baseTask = this.threadPool.Submit(() =>
+        {
+            blockSignal.Wait();
+            return 10;
+        });
+
+        var exceptions = new ConcurrentBag<Exception>();
+        var continuations = new ConcurrentBag<IMyTask<int>>();
+        var continueThreadsReady = new CountdownEvent(5);
+        var shutdownSignal = new ManualResetEventSlim(false);
+
+        var continueThreads = new List<Thread>();
+        for (int i = 0; i < 5; ++i)
+        {
+            int multiplier = i + 1;
+            var thread = new Thread(() =>
+            {
+                continueThreadsReady.Signal();
+                shutdownSignal.Wait();
+                try
+                {
+                    var cont = baseTask.ContinueWith(x => x * multiplier);
+                    continuations.Add(cont);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    exceptions.Add(ex);
+                }
+            });
+            continueThreads.Add(thread);
+            thread.Start();
+        }
+
+        continueThreadsReady.Wait();
+        shutdownSignal.Set();
+
+        var shutdownThread = new Thread(() =>
+        {
+            Thread.Sleep(10);
+            this.threadPool!.Shutdown();
+        });
+        shutdownThread.Start();
+
+        foreach (var thread in continueThreads)
+        {
+            thread.Join();
+        }
+
+        blockSignal.Set();
+        shutdownThread.Join();
+
+        Assert.That(continuations.Count + exceptions.Count, Is.EqualTo(5));
+
+        this.threadPool = null;
+    }
+
+    [Test]
+    public void RaceCondition_MultipleShutdownCalls_ShouldNotCrash()
+    {
+        this.threadPool = new MyThreadPool(4);
+        var tasks = new List<IMyTask<int>>();
+        for (int i = 0; i < 5; ++i)
+        {
+            int local = i;
+            tasks.Add(this.threadPool.Submit(() =>
+            {
+                Thread.Sleep(50);
+                return local;
+            }));
+        }
+
+        var shutdownThreads = new List<Thread>();
+        for (int i = 0; i < 5; ++i)
+        {
+            var thread = new Thread(() => this.threadPool!.Shutdown());
+            shutdownThreads.Add(thread);
+            thread.Start();
+        }
+
+        foreach (var thread in shutdownThreads)
+        {
+            thread.Join();
+        }
+
+        Assert.Pass();
+        this.threadPool = null;
+    }
+
+    [Test]
+    public void RaceCondition_ResultAccessDuringShutdown_ShouldNotDeadlock()
+    {
+        this.threadPool = new MyThreadPool(2);
+        var blockSignal = new ManualResetEventSlim(false);
+        var task = this.threadPool.Submit(() =>
+        {
+            blockSignal.Wait();
+            return 42;
+        });
+
+        var resultThread = new Thread(() =>
+        {
+            Thread.Sleep(50);
+            try
+            {
+                var result = task.Result;
+            }
+            catch
+            {
+            }
+        });
+        resultThread.Start();
+
+        var shutdownThread = new Thread(() =>
+        {
+            Thread.Sleep(100);
+            this.threadPool!.Shutdown();
+        });
+        shutdownThread.Start();
+
+        Thread.Sleep(150);
+        blockSignal.Set();
+
+        bool resultFinished = resultThread.Join(TimeSpan.FromSeconds(2));
+        bool shutdownFinished = shutdownThread.Join(TimeSpan.FromSeconds(2));
+
+        Assert.That(resultFinished, Is.True);
+        Assert.That(shutdownFinished, Is.True);
+
+        this.threadPool = null;
+    }
+
+    [Test]
+    public void RaceCondition_SubmitManyTasksConcurrently_AllShouldExecute()
+    {
+        this.threadPool = new MyThreadPool(4);
+        var tasks = new ConcurrentBag<IMyTask<int>>();
+        var submitThreads = new List<Thread>();
+        var startSignal = new ManualResetEventSlim(false);
+
+        for (int i = 0; i < 20; ++i)
+        {
+            int taskId = i;
+            var thread = new Thread(() =>
+            {
+                startSignal.Wait();
+                var task = this.threadPool!.Submit(() =>
+                {
+                    Thread.Sleep(10);
+                    return taskId * 2;
+                });
+                tasks.Add(task);
+            });
+            submitThreads.Add(thread);
+            thread.Start();
+        }
+
+        startSignal.Set();
+
+        foreach (var thread in submitThreads)
+        {
+            thread.Join();
+        }
+
+        Assert.That(tasks.Count, Is.EqualTo(20));
+
+        var results = new HashSet<int>();
+        foreach (var task in tasks)
+        {
+            results.Add(task.Result);
+        }
+
+        Assert.That(results.Count, Is.EqualTo(20));
     }
 }
