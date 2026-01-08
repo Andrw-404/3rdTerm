@@ -52,7 +52,6 @@ public class MyThreadPool
     /// </exception>
     public IMyTask<TResult> Submit<TResult>(Func<TResult> func)
     {
-
         ArgumentNullException.ThrowIfNull(func);
 
         var task = new MyTask<TResult>(func, this);
@@ -177,7 +176,6 @@ public class MyThreadPool
 
             lock (this.taskLock)
             {
-
                 var nextTask = new MyTask<TNewResult>(
                     () =>
                 {
